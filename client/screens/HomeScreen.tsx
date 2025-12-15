@@ -1,13 +1,24 @@
-import React from "react";
-import { View, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Pressable, Linking, Platform, Share } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  withRepeat,
+  withSequence,
+  Easing,
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import * as Clipboard from "expo-clipboard";
 import { ThemedText } from "@/components/ThemedText";
 import LuckyCard from "@/components/LuckyCard";
 import StarField from "@/components/StarField";
-import { Colors, Spacing, BorderRadius, Typography, Shadows } from "@/constants/theme";
+import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { useAuth } from "@/lib/auth";
 import type { DailyPrediction } from "@shared/schema";
 
@@ -27,14 +38,55 @@ export default function HomeScreen() {
   const headerHeight = useHeaderHeight();
   const { user } = useAuth();
   const theme = Colors.dark;
+  const [copied, setCopied] = useState(false);
 
   const today = new Date();
   const dateString = today.toISOString().split("T")[0];
+
+  const headerScale = useSharedValue(0.9);
+  const headerOpacity = useSharedValue(0);
+  const dateCardTranslateX = useSharedValue(-50);
+  const dateCardOpacity = useSharedValue(0);
+  const shareButtonScale = useSharedValue(1);
 
   const { data: prediction, isLoading, refetch, isRefetching } = useQuery<DailyPrediction>({
     queryKey: [`/api/predictions/${user?.id}?date=${dateString}`],
     enabled: !!user?.id,
   });
+
+  useEffect(() => {
+    headerScale.value = withTiming(1, { duration: 600, easing: Easing.out(Easing.back(1.5)) });
+    headerOpacity.value = withTiming(1, { duration: 500 });
+    
+    dateCardTranslateX.value = withDelay(200, withTiming(0, { duration: 500, easing: Easing.out(Easing.ease) }));
+    dateCardOpacity.value = withDelay(200, withTiming(1, { duration: 400 }));
+
+    shareButtonScale.value = withDelay(
+      1500,
+      withRepeat(
+        withSequence(
+          withTiming(1.05, { duration: 1000 }),
+          withTiming(1, { duration: 1000 })
+        ),
+        3,
+        true
+      )
+    );
+  }, []);
+
+  const headerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: headerScale.value }],
+    opacity: headerOpacity.value,
+  }));
+
+  const dateCardStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: dateCardTranslateX.value }],
+    opacity: dateCardOpacity.value,
+  }));
+
+  const shareButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: shareButtonScale.value }],
+  }));
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-IN", {
@@ -52,11 +104,59 @@ export default function HomeScreen() {
     return "Shubh Sandhya";
   };
 
+  const shareToWhatsApp = async () => {
+    if (!prediction) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    const message = `${prediction.luckyColor} is my lucky color today!
+
+My Daily Bhagya:
+Lucky Number: ${prediction.luckyNumber}
+Lucky Direction: ${prediction.luckyDirection}
+Lucky Time: ${prediction.luckyTime}
+${prediction.mantra ? `\nMantra: "${prediction.mantra}"` : ""}
+
+Discover your daily luck with Bhagya app!`;
+
+    const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(message)}`;
+    
+    try {
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        await Share.share({ message });
+      }
+    } catch (error) {
+      await Share.share({ message });
+    }
+  };
+
+  const copyForStatus = async () => {
+    if (!prediction) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    const statusMessage = `My Bhagya for today:
+Lucky Color: ${prediction.luckyColor}
+Lucky Number: ${prediction.luckyNumber}
+Lucky Direction: ${prediction.luckyDirection}
+
+Download Bhagya app to discover your daily luck!`;
+
+    await Clipboard.setStringAsync(statusMessage);
+    setCopied(true);
+    
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
+        <StarField count={20} />
         <ActivityIndicator size="large" color={theme.accent} />
-        <ThemedText style={styles.loadingText}>Loading your predictions...</ThemedText>
+        <ThemedText style={styles.loadingText}>Reading the stars...</ThemedText>
       </View>
     );
   }
@@ -78,17 +178,17 @@ export default function HomeScreen() {
           />
         }
       >
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, headerStyle]}>
           <View>
             <ThemedText style={styles.greeting}>{getGreeting()}</ThemedText>
             <ThemedText style={styles.userName}>{user?.name || "User"}</ThemedText>
           </View>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.dateCard, { backgroundColor: theme.cardBackground }]}>
+        <Animated.View style={[styles.dateCard, { backgroundColor: theme.cardBackground }, dateCardStyle]}>
           <Feather name="calendar" size={20} color={theme.accent} />
           <ThemedText style={styles.dateText}>{formatDate(today)}</ThemedText>
-        </View>
+        </Animated.View>
 
         <ThemedText style={styles.sectionTitle}>Today's Lucky Guide</ThemedText>
 
@@ -99,22 +199,26 @@ export default function HomeScreen() {
               value={prediction.luckyColor}
               icon="droplet"
               colorHex={prediction.luckyColorHex}
+              index={0}
             />
             <LuckyCard
               title="Lucky Number"
               value={prediction.luckyNumber.toString()}
               icon="hash"
               color={theme.accent}
+              index={1}
             />
             <LuckyCard
               title="Lucky Direction"
               value={prediction.luckyDirection}
               icon={DIRECTION_ARROWS[prediction.luckyDirection] as any || "compass"}
+              index={2}
             />
             <LuckyCard
               title="Lucky Time"
               value={prediction.luckyTime}
               icon="clock"
+              index={3}
             />
 
             {prediction.mantra ? (
@@ -123,6 +227,43 @@ export default function HomeScreen() {
                 <ThemedText style={styles.mantraText}>{prediction.mantra}</ThemedText>
               </View>
             ) : null}
+
+            <Animated.View style={[styles.shareSection, shareButtonStyle]}>
+              <Pressable
+                style={[styles.whatsappButton, { backgroundColor: "#25D366" }]}
+                onPress={shareToWhatsApp}
+              >
+                <Feather name="send" size={20} color="#FFFFFF" />
+                <ThemedText style={styles.whatsappButtonText}>Share on WhatsApp</ThemedText>
+              </Pressable>
+              
+              <Pressable
+                style={[
+                  styles.statusButton, 
+                  { 
+                    backgroundColor: copied ? "#25D366" : theme.cardBackground, 
+                    borderColor: "#25D366" 
+                  }
+                ]}
+                onPress={copyForStatus}
+              >
+                <Feather 
+                  name={copied ? "check" : "copy"} 
+                  size={16} 
+                  color={copied ? "#FFFFFF" : "#25D366"} 
+                />
+                <ThemedText style={[styles.statusButtonText, { color: copied ? "#FFFFFF" : "#25D366" }]}>
+                  {copied ? "Copied! Paste in Status" : "Copy for WhatsApp Status"}
+                </ThemedText>
+              </Pressable>
+            </Animated.View>
+
+            <View style={styles.viralHint}>
+              <Feather name="star" size={14} color={theme.textSecondary} />
+              <ThemedText style={styles.viralHintText}>
+                Share your luck with friends & family!
+              </ThemedText>
+            </View>
           </>
         ) : (
           <View style={[styles.emptyCard, { backgroundColor: theme.cardBackground }]}>
@@ -173,7 +314,6 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing["2xl"],
-    ...Shadows.card,
   },
   dateText: {
     ...Typography.body,
@@ -189,7 +329,7 @@ const styles = StyleSheet.create({
     padding: Spacing["2xl"],
     borderRadius: BorderRadius.md,
     marginTop: Spacing.sm,
-    ...Shadows.elevated,
+    marginBottom: Spacing.xl,
   },
   mantraLabel: {
     ...Typography.small,
@@ -201,11 +341,52 @@ const styles = StyleSheet.create({
     color: Colors.dark.accent,
     fontStyle: "italic",
   },
+  shareSection: {
+    marginTop: Spacing.xl,
+    gap: Spacing.md,
+  },
+  whatsappButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.md,
+  },
+  whatsappButtonText: {
+    ...Typography.body,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  statusButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    gap: Spacing.md,
+  },
+  statusButtonText: {
+    ...Typography.body,
+    fontWeight: "600",
+  },
+  viralHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  viralHintText: {
+    ...Typography.small,
+    color: Colors.dark.textSecondary,
+    textAlign: "center",
+  },
   emptyCard: {
     padding: Spacing["3xl"],
     borderRadius: BorderRadius.md,
     alignItems: "center",
-    ...Shadows.card,
   },
   emptyText: {
     ...Typography.body,
