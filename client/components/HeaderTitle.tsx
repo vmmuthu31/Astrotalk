@@ -1,21 +1,23 @@
 import React from "react";
 import { View, StyleSheet, Image } from "react-native";
-
 import { ThemedText } from "@/components/ThemedText";
-import { Spacing } from "@/constants/theme";
+import { Spacing, Colors, Typography } from "@/constants/theme";
 
 interface HeaderTitleProps {
   title: string;
+  showIcon?: boolean;
 }
 
-export function HeaderTitle({ title }: HeaderTitleProps) {
+export function HeaderTitle({ title, showIcon = false }: HeaderTitleProps) {
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../../assets/images/icon.png")}
-        style={styles.icon}
-        resizeMode="contain"
-      />
+      {showIcon ? (
+        <Image
+          source={require("../../assets/images/icon.png")}
+          style={styles.icon}
+          resizeMode="contain"
+        />
+      ) : null}
       <ThemedText style={styles.title}>{title}</ThemedText>
     </View>
   );
@@ -31,9 +33,10 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     marginRight: Spacing.sm,
+    borderRadius: 6,
   },
   title: {
-    fontSize: 17,
-    fontWeight: "600",
+    ...Typography.cardTitle,
+    color: Colors.dark.accent,
   },
 });

@@ -1,25 +1,23 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import ProfileScreen from "@/screens/ProfileScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
+import NakshatraScreen from "@/screens/NakshatraScreen";
 
-export type ProfileStackParamList = {
-  Profile: undefined;
+export type NakshatraStackParamList = {
+  Nakshatra: undefined;
 };
 
-const Stack = createNativeStackNavigator<ProfileStackParamList>();
+const Stack = createNativeStackNavigator<NakshatraStackParamList>();
 
-export default function ProfileStackNavigator() {
+export default function NakshatraStackNavigator() {
   const screenOptions = useScreenOptions({ transparent: false });
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          headerTitle: "Profile",
-        }}
+        name="Nakshatra"
+        component={NakshatraScreen}
+        options={{ headerTitle: "Your Nakshatra" }}
       />
     </Stack.Navigator>
   );
