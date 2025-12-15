@@ -2,7 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { Platform, StyleSheet } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import NakshatraStackNavigator from "@/navigation/NakshatraStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
@@ -27,21 +27,17 @@ export default function MainTabNavigator() {
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: Platform.select({
-            ios: "transparent",
-            android: theme.backgroundDefault,
-          }),
+          backgroundColor: "transparent",
           borderTopWidth: 0,
           elevation: 0,
         },
-        tabBarBackground: () =>
-          Platform.OS === "ios" ? (
-            <BlurView
-              intensity={100}
-              tint="dark"
-              style={StyleSheet.absoluteFill}
-            />
-          ) : null,
+        tabBarBackground: () => (
+          <BlurView
+            intensity={80}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
+        ),
         headerShown: false,
       }}
     >
