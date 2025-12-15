@@ -15,6 +15,7 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import * as Clipboard from "expo-clipboard";
+import * as Speech from "expo-speech";
 import { ThemedText } from "@/components/ThemedText";
 import LuckyCard from "@/components/LuckyCard";
 import StarField from "@/components/StarField";
@@ -39,6 +40,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const theme = Colors.dark;
   const [copied, setCopied] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const today = new Date();
   const dateString = today.toISOString().split("T")[0];
@@ -72,6 +74,10 @@ export default function HomeScreen() {
         true
       )
     );
+
+    return () => {
+      Speech.stop();
+    };
   }, []);
 
   const headerStyle = useAnimatedStyle(() => ({
@@ -151,6 +157,29 @@ Download Bhagya app to discover your daily luck!`;
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const playMantra = async () => {
+    if (!prediction?.mantra) return;
+
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+      return;
+    }
+
+    setIsSpeaking(true);
+    
+    Speech.speak(prediction.mantra, {
+      language: "hi-IN",
+      pitch: 1.0,
+      rate: 0.85,
+      onDone: () => setIsSpeaking(false),
+      onStopped: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
@@ -223,7 +252,30 @@ Download Bhagya app to discover your daily luck!`;
 
             {prediction.mantra ? (
               <View style={[styles.mantraCard, { backgroundColor: theme.primary }]}>
-                <ThemedText style={styles.mantraLabel}>Today's Mantra</ThemedText>
+                <View style={styles.mantraHeader}>
+                  <ThemedText style={styles.mantraLabel}>Today's Mantra</ThemedText>
+                  <Pressable
+                    style={[
+                      styles.playButton,
+                      { backgroundColor: isSpeaking ? theme.accent : theme.cardBackground }
+                    ]}
+                    onPress={playMantra}
+                  >
+                    <Feather
+                      name={isSpeaking ? "pause" : "play"}
+                      size={18}
+                      color={isSpeaking ? theme.backgroundRoot : theme.accent}
+                    />
+                    <ThemedText
+                      style={[
+                        styles.playButtonText,
+                        { color: isSpeaking ? theme.backgroundRoot : theme.accent }
+                      ]}
+                    >
+                      {isSpeaking ? "Stop" : "Listen"}
+                    </ThemedText>
+                  </Pressable>
+                </View>
                 <ThemedText style={styles.mantraText}>{prediction.mantra}</ThemedText>
               </View>
             ) : null}
@@ -331,10 +383,27 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     marginBottom: Spacing.xl,
   },
+  mantraHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
   mantraLabel: {
     ...Typography.small,
     color: Colors.dark.textSecondary,
-    marginBottom: Spacing.sm,
+  },
+  playButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+  },
+  playButtonText: {
+    ...Typography.small,
+    fontWeight: "600",
   },
   mantraText: {
     ...Typography.h4,
