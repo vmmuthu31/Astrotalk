@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, integer, date, time } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, integer, date, time, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -11,8 +11,13 @@ export const users = pgTable("users", {
   birthDate: date("birth_date").notNull(),
   birthTime: time("birth_time").notNull(),
   birthPlace: text("birth_place").notNull(),
+  birthLat: text("birth_lat"),
+  birthLng: text("birth_lng"),
   nakshatra: text("nakshatra"),
   rashi: text("rashi"),
+  lagnaSign: text("lagna_sign"),
+  moonNakshatraLord: text("moon_nakshatra_lord"),
+  natalChartData: jsonb("natal_chart_data"),
   isSubscribed: boolean("is_subscribed").default(false),
   subscriptionEndDate: timestamp("subscription_end_date"),
   notificationTime: time("notification_time").default("07:00"),
@@ -33,12 +38,19 @@ export const dailyPredictions = pgTable("daily_predictions", {
     .notNull()
     .references(() => users.id),
   date: date("date").notNull(),
+  rulingPlanet: text("ruling_planet"),
   luckyColor: text("lucky_color").notNull(),
   luckyColorHex: text("lucky_color_hex").notNull(),
   luckyNumber: integer("lucky_number").notNull(),
   luckyDirection: text("lucky_direction").notNull(),
+  luckyDirectionHi: text("lucky_direction_hi"),
   luckyTime: text("lucky_time").notNull(),
+  luckyTimeWindows: jsonb("lucky_time_windows"),
   mantra: text("mantra"),
+  mantraMeaning: text("mantra_meaning"),
+  weekdayLord: text("weekday_lord"),
+  todayNakshatra: text("today_nakshatra"),
+  scores: jsonb("scores"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

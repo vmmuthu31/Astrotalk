@@ -1,0 +1,364 @@
+Below is a **complete V1 spec** your dev can implement without guesswork. It’s deterministic, stable, and “Vedic enough” without getting too heavy.
+
+# V1 Spec: Daily Lucky Color, Number, Direction, Time, Mantra (Vedic)
+
+## 0) Definitions and fixed choices
+
+**Ayanamsa:** Lahiri
+**House system:** Whole Sign Houses
+**Day boundary:** sunrise-to-sunrise in user timezone (not midnight)
+**Location for daily calculations:** user’s current timezone. Use **birth place lat/long** unless you also collect current location.
+
+**Outputs returned daily (max 1 screen):**
+
+* lucky_color (string + hex optional)
+* lucky_number (int)
+* lucky_direction (enum)
+* lucky_time_windows (1–2 windows in local time)
+* today_mantra (sanskrit + short meaning line)
+
+---
+
+## 1) Inputs
+
+### 1.1 User onboarding inputs
+
+* `dob` (YYYY-MM-DD)
+* `birth_time` (HH:MM) (required for full natal; if missing, use fallback mode)
+* `birth_place` (lat, long)
+* `birth_timezone` (IANA tz)
+
+### 1.2 Daily runtime inputs
+
+* `date` (today in user tz)
+* `user_timezone` (IANA tz; default from device)
+* `calc_location` (lat/long):
+
+  * V1: birth_place
+  * optional: current device location if available
+
+---
+
+## 2) Engines / calculations required
+
+### 2.1 Natal chart (computed once; cached)
+
+Compute:
+
+* `lagna_sign`
+* `moon_sign`
+* `moon_nakshatra` (1–27)
+* `moon_nakshatra_lord` (planet)
+* `planet_signs` for {Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu}
+* `planet_house_from_lagna` (whole sign)
+* `planet_house_from_moon` (whole sign, optional but easy)
+
+**Cache** these per user.
+
+### 2.2 Daily panchang + transits (computed daily)
+
+For `date` and `calc_location` (user tz):
+
+* `sunrise_time`, `sunset_time`
+* `weekday` (vaara)
+* `weekday_lord`
+* `today_nakshatra` (Moon’s nakshatra at sunrise) + `today_nakshatra_lord`
+* `tithi_at_sunrise` + `tithi_lord` (optional in V1 scoring; included for expansion)
+* Transit longitudes/signs at sunrise:
+
+  * `transit_moon_sign`, `transit_moon_sign_lord`
+  * (optional v1+) Sun sign, Jupiter sign, Saturn sign
+
+> V1 rule: take “today values” at **sunrise** for stability.
+
+---
+
+## 3) Core selection: Ruling Planet of the Day (RPD)
+
+### 3.1 Candidate planets
+
+Use these 4 only (keeps it clean and strong):
+
+1. `weekday_lord`
+2. `today_nakshatra_lord`
+3. `natal_moon_nakshatra_lord`
+4. `transit_moon_sign_lord`
+
+(Unique them; max 4 planets.)
+
+### 3.2 Base relevance weights
+
+* weekday_lord: **+30**
+* today_nakshatra_lord: **+25**
+* natal_moon_nakshatra_lord: **+20**
+* transit_moon_sign_lord: **+15**
+
+### 3.3 Natal strength modifier (per candidate planet)
+
+Compute `natal_strength(planet)` using ONLY these rules:
+
+**Dignity by sign (at birth):**
+
+* Exalted: +10
+* Own sign: +8
+* Friendly sign: +4
+* Neutral sign: +0
+* Enemy sign: -4
+* Debilitated: -10
+
+**House placement from Lagna (whole sign):**
+
+* House 1/5/9/10/11: +3
+* House 2/3/4/7: +1
+* House 6/8/12: -3
+
+**Combust (birth)** (skip Moon, Rahu, Ketu):
+
+* if planet within combust orb of Sun: -4
+  (Dev chooses standard orbs; keep consistent. If you don’t want complexity: ignore combust in V1.)
+
+So:
+`natal_strength = dignity + house_bonus + combust_penalty`
+
+### 3.4 Transit suitability modifier (simple, V1)
+
+Use house from **natal Moon sign** (whole sign):
+
+* Transit planet in houses 1/3/6/10/11 from natal Moon: **+3**
+* in 2/4/5/7/9: **0**
+* in 8/12: **-3**
+
+If you don’t compute transit of each candidate planet, you can skip this in V1 and add later. (Still works.)
+
+### 3.5 Total score
+
+For each candidate planet:
+`score = base_weight + natal_strength + transit_modifier`
+
+### 3.6 Tie-break rules (deterministic)
+
+If scores tie within 2 points:
+Priority order:
+
+1. weekday_lord
+2. today_nakshatra_lord
+3. natal_moon_nakshatra_lord
+4. transit_moon_sign_lord
+
+### 3.7 Smoothing (prevents daily “random jumps”)
+
+Let `yesterday_rpd` be stored.
+
+Rule:
+
+* If `top_planet != yesterday_rpd` AND `(top_score - score(yesterday_rpd)) < 12`
+  → keep `yesterday_rpd`.
+
+(If yesterday_rpd isn’t in candidates today, ignore smoothing.)
+
+**Store** today’s final RPD.
+
+---
+
+## 4) Mapping RPD → Lucky outputs
+
+### 4.1 Planet constants
+
+#### Lucky number mapping
+
+* Sun=1, Moon=2, Jupiter=3, Rahu=4, Mercury=5, Venus=6, Ketu=7, Saturn=8, Mars=9
+
+#### Lucky direction mapping
+
+* Sun: East
+* Moon: North-West
+* Mars: South
+* Mercury: North
+* Jupiter: North-East
+* Venus: South-East
+* Saturn: West
+* Rahu: South-West
+* Ketu: North-East  *(keep same always for consistency)*
+
+#### Lucky color mapping (with suggested palettes)
+
+Keep 2–3 options per planet; pick the first for V1 (deterministic), rotate later if you want.
+
+* Sun: Gold / Saffron / Orange
+* Moon: White / Silver / Cream
+* Mars: Red / Coral
+* Mercury: Green
+* Jupiter: Yellow / Turmeric
+* Venus: Pink / Pastel tones
+* Saturn: Navy / Charcoal / Black
+* Rahu: Smoky Grey / Electric Blue
+* Ketu: Maroon / Earth Brown
+
+**V1 deterministic rule:** always choose the first color for the planet.
+
+### 4.2 Mantra mapping (V1)
+
+Use simple bija-style lines + one short meaning.
+
+* Sun: `Om Suryaya Namah` — “I lead with clarity.”
+* Moon: `Om Som Somaya Namah` — “I stay calm and steady.”
+* Mars: `Om Mangalaya Namah` — “I act with courage.”
+* Mercury: `Om Budhaya Namah` — “My mind is sharp and clear.”
+* Jupiter: `Om Gurave Namah` — “I choose wisdom.”
+* Venus: `Om Shukraya Namah` — “I attract harmony.”
+* Saturn: `Om Sham Shanicharaya Namah` — “I build with patience.”
+* Rahu: `Om Rahave Namah` — “I stay aware and focused.”
+* Ketu: `Om Ketave Namah` — “I let go and trust.”
+
+**Optional tone tweak (still deterministic):**
+Based on today’s Moon nakshatra category at sunrise:
+
+* “soft” → meaning line more soothing
+* “sharp” → meaning line more grounding
+  (You can implement later; V1 can skip.)
+
+---
+
+## 5) Lucky timing (Hora-based, V1)
+
+This is the part users feel most. Keep it solid and usable.
+
+### 5.1 Compute planetary horas
+
+1. Compute `sunrise`, `sunset`.
+2. Day length = `sunset - sunrise`.
+   Night length = next_day_sunrise - sunset.
+3. Divide day length into 12 equal horas, and night length into 12.
+
+### 5.2 Hora lord sequence
+
+Hora lords follow Chaldean order repeating:
+`Saturn → Jupiter → Mars → Sun → Venus → Mercury → Moon → (repeat)`
+
+The **first hora at sunrise** is the **weekday lord**.
+
+So to generate hour lords:
+
+* Start with weekday lord at sunrise
+* Then follow the sequence above, cycling
+
+### 5.3 Select time windows for RPD
+
+Pick:
+
+* the **first** day-time hora ruled by `RPD`
+* optionally the **second** day-time hora ruled by `RPD` (if it exists within usable hours)
+
+### 5.4 Usability filters (hard rules)
+
+Only return windows that:
+
+* start >= **07:00** local time
+* end <= **22:30** local time
+* duration >= **25 minutes** (hora will be longer than this anyway)
+
+If the first matching hora fails filters, take the next matching hora that passes.
+
+If no day-time hora passes, take night-time hora that passes.
+
+If still none, fallback:
+
+* return a generic “Lucky Time: within 10:00–11:00” (but this should be rare with filters).
+
+### 5.5 Output formatting
+
+Return 1 window by default. Return 2 if the second window is at least 3 hours apart (feels intentional).
+
+Example:
+
+* `10:18 AM – 11:15 AM`
+* `4:42 PM – 5:39 PM`
+
+---
+
+## 6) Fallback modes (when birth time is missing or low-confidence)
+
+### 6.1 If birth time missing
+
+Skip Lagna and house-based natal strength.
+Use only:
+
+* weekday lord (30)
+* today nakshatra lord (25)
+* natal moon nakshatra lord (20)  *(Moon nakshatra can still be computed with an approximate time? If not reliable, drop it.)*
+* transit moon sign lord (15)
+
+And in natal strength, use **only dignity-by-sign** if available; otherwise 0.
+
+### 6.2 If birth place missing
+
+Use a default location (e.g., user’s current city) for sunrise/panchang. If none, use UTC sunrise approximations (not recommended, but workable).
+
+---
+
+## 7) Data to store per user / per day
+
+### 7.1 Per user (cached)
+
+* natal chart essentials (above)
+* natal strength per planet (precomputed)
+
+### 7.2 Per day (stored)
+
+* date
+* panchang at sunrise (weekday, nakshatra, sunrise/sunset)
+* candidates + scores
+* final RPD (after smoothing)
+* final outputs
+
+Storing daily outputs helps you show “history” later and makes debugging easy.
+
+---
+
+## 8) Pseudocode (high level)
+
+```text
+function generateDailyLuck(user, date, tz):
+  natal = user.natal_cache
+  p = dailyPanchang(date, user.birth_place, tz)
+
+  candidates = unique([
+    p.weekday_lord,
+    p.today_nakshatra_lord,
+    natal.moon_nakshatra_lord,
+    p.transit_moon_sign_lord
+  ])
+
+  scores = {}
+  for planet in candidates:
+    base = weightFromSource(planet)
+    natal_strength = natalStrength(planet, natal)   # precomputed
+    transit_mod = transitModifier(planet, natal.moon_sign, p) # optional
+    scores[planet] = base + natal_strength + transit_mod
+
+  top = argmax(scores, tieBreakPriority)
+  final_rpd = applySmoothing(top, scores, user.yesterday_rpd)
+
+  color = planetColor(final_rpd)
+  number = planetNumber(final_rpd)
+  direction = planetDirection(final_rpd)
+  time_windows = horaWindows(final_rpd, p.sunrise, p.sunset, p.next_sunrise, tz)
+  mantra = planetMantra(final_rpd)
+
+  saveDaily(user, date, final_rpd, outputs)
+  return outputs
+```
+
+---
+
+## 9) What your dev needs to implement this fast
+
+* Swiss Ephemeris (or any reliable Vedic chart lib) for:
+
+  * moon nakshatra at birth and at sunrise
+  * signs and longitudes
+  * sunrise/sunset
+
+* Panchang function that returns nakshatra at sunrise.
+
+If you tell me your stack (**Node** or **Python**) I’ll recommend a concrete library set and the exact functions to call (no hand-waving), plus a ready JSON mapping table you can paste into code.
