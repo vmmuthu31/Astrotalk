@@ -14,7 +14,6 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import * as Clipboard from "expo-clipboard";
 import * as Speech from "expo-speech";
 import { ThemedText } from "@/components/ThemedText";
 import LuckyCard from "@/components/LuckyCard";
@@ -39,7 +38,6 @@ export default function HomeScreen() {
   const headerHeight = useHeaderHeight();
   const { user } = useAuth();
   const theme = Colors.dark;
-  const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   const today = new Date();
@@ -137,24 +135,6 @@ Discover your daily luck with Bhagya app!`;
     } catch (error) {
       await Share.share({ message });
     }
-  };
-
-  const copyForStatus = async () => {
-    if (!prediction) return;
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
-    const statusMessage = `My Bhagya for today:
-Lucky Color: ${prediction.luckyColor}
-Lucky Number: ${prediction.luckyNumber}
-Lucky Direction: ${prediction.luckyDirection}
-
-Download Bhagya app to discover your daily luck!`;
-
-    await Clipboard.setStringAsync(statusMessage);
-    setCopied(true);
-    
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const playMantra = async () => {
@@ -288,26 +268,6 @@ Download Bhagya app to discover your daily luck!`;
                 <Feather name="send" size={20} color="#FFFFFF" />
                 <ThemedText style={styles.whatsappButtonText}>Share on WhatsApp</ThemedText>
               </Pressable>
-              
-              <Pressable
-                style={[
-                  styles.statusButton, 
-                  { 
-                    backgroundColor: copied ? "#25D366" : theme.cardBackground, 
-                    borderColor: "#25D366" 
-                  }
-                ]}
-                onPress={copyForStatus}
-              >
-                <Feather 
-                  name={copied ? "check" : "copy"} 
-                  size={16} 
-                  color={copied ? "#FFFFFF" : "#25D366"} 
-                />
-                <ThemedText style={[styles.statusButtonText, { color: copied ? "#FFFFFF" : "#25D366" }]}>
-                  {copied ? "Copied! Paste in Status" : "Copy for WhatsApp Status"}
-                </ThemedText>
-              </Pressable>
             </Animated.View>
 
             <View style={styles.viralHint}>
@@ -425,19 +385,6 @@ const styles = StyleSheet.create({
   whatsappButtonText: {
     ...Typography.body,
     color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  statusButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    borderWidth: 2,
-    gap: Spacing.md,
-  },
-  statusButtonText: {
-    ...Typography.body,
     fontWeight: "600",
   },
   viralHint: {
