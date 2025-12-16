@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Pressable, TextInput, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -12,10 +12,13 @@ import { Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
 import { OnboardingStackParamList } from "@/navigation/OnboardingStackNavigator";
 
 type NavigationProp = NativeStackNavigationProp<OnboardingStackParamList, "BirthDetails">;
+type RouteProps = RouteProp<OnboardingStackParamList, "BirthDetails">;
 
 export default function BirthDetailsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<RouteProps>();
+  const language = route.params?.language ?? "en";
   const theme = Colors.dark;
 
   const [name, setName] = useState("");
@@ -34,6 +37,7 @@ export default function BirthDetailsScreen() {
       birthDate: birthDate.toISOString().split("T")[0],
       birthTime: birthTime.toTimeString().slice(0, 5),
       birthPlace: birthPlace.trim(),
+      language,
     });
   };
 

@@ -43,7 +43,7 @@ export default function WelcomeScreen() {
             { backgroundColor: theme.secondary },
             pressed && styles.buttonPressed,
           ]}
-          onPress={() => navigation.navigate("BirthDetails")}
+          onPress={() => navigation.navigate("LanguageSelection")}
         >
           <ThemedText style={styles.buttonText}>Get Started</ThemedText>
         </Pressable>

@@ -66,6 +66,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   birthDate: true,
   birthTime: true,
   birthPlace: true,
+  language: true,
 });
 
 export const insertPredictionSchema = createInsertSchema(dailyPredictions).pick({

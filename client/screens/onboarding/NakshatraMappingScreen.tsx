@@ -184,7 +184,7 @@ function AnimatedConstellationLine({ from, to, opacity }: { from: { x: number; y
 export default function NakshatraMappingScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  const { name, birthDate, birthTime, birthPlace } = route.params;
+  const { name, birthDate, birthTime, birthPlace, language } = route.params;
   const { setUser } = useAuth();
 
   const [phase, setPhase] = useState(0);
@@ -212,6 +212,7 @@ export default function NakshatraMappingScreen() {
         birthDate,
         birthTime,
         birthPlace,
+        language,
       });
       return response.json();
     },
