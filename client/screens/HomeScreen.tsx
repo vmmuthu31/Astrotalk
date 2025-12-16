@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Pressable, Linking, Platform, Share } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { View, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, Pressable, Linking, Platform, Share, AppState } from "react-native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -33,15 +33,16 @@ const DIRECTION_ARROWS: Record<string, string> = {
   "South-West": "arrow-down-left",
 };
 
+const getDateString = () => new Date().toISOString().split("T")[0];
+
 export default function HomeScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const headerHeight = useHeaderHeight();
   const { user } = useAuth();
   const theme = Colors.dark;
   const [isSpeaking, setIsSpeaking] = useState(false);
-
+  const [dateString, setDateString] = useState(getDateString);
   const today = new Date();
-  const dateString = today.toISOString().split("T")[0];
 
   const headerScale = useSharedValue(0.9);
   const headerOpacity = useSharedValue(0);
@@ -77,6 +78,28 @@ export default function HomeScreen() {
       Speech.stop();
     };
   }, []);
+
+  useEffect(() => {
+    const checkDateChange = () => {
+      const currentDate = getDateString();
+      if (currentDate !== dateString) {
+        setDateString(currentDate);
+      }
+    };
+
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        checkDateChange();
+      }
+    });
+
+    const interval = setInterval(checkDateChange, 60000);
+
+    return () => {
+      subscription.remove();
+      clearInterval(interval);
+    };
+  }, [dateString]);
 
   const headerStyle = useAnimatedStyle(() => ({
     transform: [{ scale: headerScale.value }],
