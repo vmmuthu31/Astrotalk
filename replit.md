@@ -29,7 +29,7 @@ client/
 │   ├── OnboardingStackNavigator.tsx
 │   └── ...
 └── screens/
-    ├── onboarding/         # Welcome, BirthDetails, NakshatraMapping, Subscription
+    ├── onboarding/         # Welcome, LanguageSelection, BirthDetails, NakshatraMapping, Subscription
     ├── HomeScreen.tsx      # Daily luck dashboard
     ├── NakshatraScreen.tsx # Birth chart and nakshatra details
     └── ProfileScreen.tsx   # User settings and subscription
@@ -45,7 +45,7 @@ shared/
 ```
 
 ## Key Features
-1. **Onboarding Flow**: Collect birth details with animated nakshatra constellation mapping
+1. **Onboarding Flow**: Language selection, birth details collection, and animated nakshatra constellation mapping
 2. **Daily Predictions**: Lucky color, number, direction, time, and mantra
 3. **Nakshatra Chart**: Visual birth chart with detailed nakshatra information
 4. **UPI AutoPay Subscription**: Mock integration for recurring payments (Rs. 99/month)
@@ -69,9 +69,10 @@ The app runs on port 5000 (Express server) and port 8081 (Expo Metro bundler).
 Users can scan the QR code with Expo Go to test on physical devices.
 
 ## User Preferences
-- Language: English (Hindi text included for greetings)
+- Language: User selects during onboarding (12 Indian languages supported: English, Hindi, Bengali, Telugu, Marathi, Tamil, Gujarati, Kannada, Malayalam, Punjabi, Odia, Assamese)
 - Theme: Dark mode only
 - Notification time: Default 7:00 AM
 
 ## Recent Changes
+- December 2024: Added language selection during onboarding with 12 Indian language options
 - December 2024: Initial MVP with onboarding, daily predictions, nakshatra chart, and profile screens
