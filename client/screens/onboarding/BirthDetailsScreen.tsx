@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Pressable, TextInput, Platform } from "react-native";
+import { View, StyleSheet, Pressable, TextInput, Platform, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -144,29 +144,67 @@ export default function BirthDetailsScreen() {
         </Pressable>
 
         {showDatePicker && (
-          <DateTimePicker
-            value={birthDate}
-            mode="date"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, date) => {
-              setShowDatePicker(Platform.OS === "ios");
-              if (date) setBirthDate(date);
-            }}
-            maximumDate={new Date()}
-            minimumDate={new Date(1920, 0, 1)}
-          />
+          <Modal
+            visible={showDatePicker}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowDatePicker(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={[styles.pickerModal, { backgroundColor: theme.backgroundDefault }]}>
+                <ThemedText style={styles.pickerModalTitle}>Select Date of Birth</ThemedText>
+                <DateTimePicker
+                  value={birthDate}
+                  mode="date"
+                  display="spinner"
+                  onChange={(event, date) => {
+                    if (date) setBirthDate(date);
+                  }}
+                  maximumDate={new Date()}
+                  minimumDate={new Date(1920, 0, 1)}
+                  textColor={theme.text}
+                  style={styles.picker}
+                />
+                <Pressable
+                  style={[styles.pickerDoneButton, { backgroundColor: theme.secondary }]}
+                  onPress={() => setShowDatePicker(false)}
+                >
+                  <ThemedText style={styles.pickerDoneText}>Done</ThemedText>
+                </Pressable>
+              </View>
+            </View>
+          </Modal>
         )}
 
         {showTimePicker && (
-          <DateTimePicker
-            value={birthTime}
-            mode="time"
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={(event, date) => {
-              setShowTimePicker(Platform.OS === "ios");
-              if (date) setBirthTime(date);
-            }}
-          />
+          <Modal
+            visible={showTimePicker}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowTimePicker(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={[styles.pickerModal, { backgroundColor: theme.backgroundDefault }]}>
+                <ThemedText style={styles.pickerModalTitle}>Select Time of Birth</ThemedText>
+                <DateTimePicker
+                  value={birthTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={(event, date) => {
+                    if (date) setBirthTime(date);
+                  }}
+                  textColor={theme.text}
+                  style={styles.picker}
+                />
+                <Pressable
+                  style={[styles.pickerDoneButton, { backgroundColor: theme.secondary }]}
+                  onPress={() => setShowTimePicker(false)}
+                >
+                  <ThemedText style={styles.pickerDoneText}>Done</ThemedText>
+                </Pressable>
+              </View>
+            </View>
+          </Modal>
         )}
       </KeyboardAwareScrollViewCompat>
     </View>
@@ -240,6 +278,39 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   buttonText: {
+    ...Typography.body,
+    fontWeight: "600",
+    color: Colors.dark.buttonText,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pickerModal: {
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xl,
+    width: "85%",
+    maxWidth: 340,
+    alignItems: "center",
+  },
+  pickerModalTitle: {
+    ...Typography.h4,
+    color: Colors.dark.text,
+    marginBottom: Spacing.lg,
+  },
+  picker: {
+    width: "100%",
+    height: 200,
+  },
+  pickerDoneButton: {
+    marginTop: Spacing.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing["3xl"],
+    borderRadius: BorderRadius.md,
+  },
+  pickerDoneText: {
     ...Typography.body,
     fontWeight: "600",
     color: Colors.dark.buttonText,
