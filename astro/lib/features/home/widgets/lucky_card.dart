@@ -83,9 +83,9 @@ class _LuckyCardState extends State<LuckyCard> with SingleTickerProviderStateMix
         return Transform.translate(
           offset: Offset(0, _slideAnimation.value),
           child: Transform.scale(
-            scale: _scaleAnimation.value,
+            scale: _scaleAnimation.value.clamp(0.0, 2.0),
             child: Opacity(
-              opacity: _opacityAnimation.value,
+              opacity: _opacityAnimation.value.clamp(0.0, 1.0),
               child: child,
             ),
           ),

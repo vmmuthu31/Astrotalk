@@ -186,9 +186,9 @@ Discover your daily luck with Bhagya app!''';
       animation: _headerController,
       builder: (context, child) {
         return Transform.scale(
-          scale: _headerScale.value,
+          scale: _headerScale.value.clamp(0.0, 2.0),
           child: Opacity(
-            opacity: _headerOpacity.value,
+            opacity: _headerOpacity.value.clamp(0.0, 1.0),
             child: child,
           ),
         );

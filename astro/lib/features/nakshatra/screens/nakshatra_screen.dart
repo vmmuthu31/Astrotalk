@@ -69,31 +69,43 @@ class NakshatraScreen extends ConsumerWidget {
   }
 
   Widget _buildChartCard(String nakshatra, String rashi) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl2),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            width: 280,
-            height: 280,
-            child: CustomPaint(painter: _ConstellationPainter()),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(nakshatra, style: AppTypography.h2.copyWith(color: AppColors.accent)),
-          const SizedBox(height: AppSpacing.xs),
-          Text('Rashi: $rashi', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
-        ],
+    return Center(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xl2),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(38),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 220,
+              height: 220,
+              child: CustomPaint(painter: _ConstellationPainter()),
+            ),
+            const SizedBox(height: AppSpacing.xl2),
+            Text(
+              nakshatra,
+              style: AppTypography.h2.copyWith(color: AppColors.accent),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Rashi: $rashi',
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

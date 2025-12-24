@@ -36,7 +36,7 @@ class ProfileScreen extends ConsumerWidget {
               _SettingsRow(
                 icon: Icons.notifications,
                 label: 'Notifications',
-                onTap: () => context.go('/notification-settings'),
+                onTap: () => context.push('/notification-settings'),
               ),
               _SettingsRow(icon: Icons.language, label: 'Language', value: 'English'),
               _SettingsRow(icon: Icons.dark_mode, label: 'Theme', value: 'Dark'),
@@ -60,28 +60,40 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _buildProfileCard(String name, String nakshatra, String rashi) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl2),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primary,
+    return Center(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xl2),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary,
+              ),
+              child: const Icon(Icons.star, size: 32, color: AppColors.accent),
             ),
-            child: const Icon(Icons.star, size: 32, color: AppColors.accent),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(name, style: AppTypography.h3),
-          const SizedBox(height: AppSpacing.xs),
-          Text('$nakshatra - $rashi', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
-        ],
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              name,
+              style: AppTypography.h3,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '$nakshatra - $rashi',
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }
