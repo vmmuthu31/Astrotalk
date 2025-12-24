@@ -13,7 +13,14 @@ class LanguageSelectionScreen extends StatefulWidget {
 }
 
 class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
-  String _selectedLanguage = 'en';
+  String? _selectedLanguage;
+
+  void _selectLanguage(String language) {
+    setState(() => _selectedLanguage = language);
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) context.push('/birth-details', extra: language);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +36,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   IconButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.go('/welcome'),
                     icon: const Icon(Icons.arrow_back, color: AppColors.text),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -46,24 +53,28 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
                     title: 'English',
                     subtitle: 'Continue in English',
                     isSelected: _selectedLanguage == 'en',
-                    onTap: () {
-                      setState(() => _selectedLanguage = 'en');
-                      Future.delayed(const Duration(milliseconds: 200), () {
-                        if (mounted) context.go('/birth-details', extra: 'en');
-                      });
-                    },
+                    onTap: () => _selectLanguage('en'),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   _LanguageOption(
                     title: 'हिन्दी',
                     subtitle: 'हिन्दी में जारी रखें',
                     isSelected: _selectedLanguage == 'hi',
-                    onTap: () {
-                      setState(() => _selectedLanguage = 'hi');
-                      Future.delayed(const Duration(milliseconds: 200), () {
-                        if (mounted) context.go('/birth-details', extra: 'hi');
-                      });
-                    },
+                    onTap: () => _selectLanguage('hi'),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _LanguageOption(
+                    title: 'தமிழ்',
+                    subtitle: 'தமிழில் தொடரவும்',
+                    isSelected: _selectedLanguage == 'ta',
+                    onTap: () => _selectLanguage('ta'),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _LanguageOption(
+                    title: 'తెలుగు',
+                    subtitle: 'తెలుగులో కొనసాగించండి',
+                    isSelected: _selectedLanguage == 'te',
+                    onTap: () => _selectLanguage('te'),
                   ),
                 ],
               ),
