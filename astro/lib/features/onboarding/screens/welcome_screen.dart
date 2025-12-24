@@ -44,41 +44,56 @@ class WelcomeScreen extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 120,
-          height: 120,
+          width: 140,
+          height: 140,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
-                AppColors.primary,
-                AppColors.primary.withOpacity(0.6),
+                Color(0xFF6B21A8),
+                Color(0xFF4A148C),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.accent.withOpacity(0.3),
-                blurRadius: 30,
-                spreadRadius: 5,
+                color: AppColors.accent.withAlpha(77),
+                blurRadius: 40,
+                spreadRadius: 8,
               ),
             ],
           ),
-          child: const Icon(
-            Icons.auto_awesome,
-            size: 60,
-            color: AppColors.accent,
+          child: ClipOval(
+            child: Image.asset(
+              'assets/icon.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.auto_awesome,
+                size: 70,
+                color: AppColors.accent,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          'Bhagya',
-          style: AppTypography.h1.copyWith(color: AppColors.accent),
+        const SizedBox(height: AppSpacing.xl2),
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [AppColors.accent, Color(0xFFFFA500)],
+          ).createShader(bounds),
+          child: Text(
+            'Bhagya',
+            style: AppTypography.h1.copyWith(
+              fontSize: 42,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Your Daily Cosmic Guide',
-          style: AppTypography.h4,
+          style: AppTypography.h4.copyWith(color: AppColors.text),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -91,16 +106,23 @@ class WelcomeScreen extends StatelessWidget {
   }
 
   Widget _buildFeatureSection() {
-    return Column(
-      children: [
-        _FeatureItem(icon: Icons.star, text: 'Daily Lucky Color & Number'),
-        const SizedBox(height: AppSpacing.lg),
-        _FeatureItem(icon: Icons.explore, text: 'Auspicious Directions'),
-        const SizedBox(height: AppSpacing.lg),
-        _FeatureItem(icon: Icons.access_time, text: 'Lucky Time Predictions'),
-        const SizedBox(height: AppSpacing.lg),
-        _FeatureItem(icon: Icons.notifications, text: 'Daily Notifications'),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(AppBorderRadius.lg),
+      ),
+      child: const Column(
+        children: [
+          _FeatureItem(icon: Icons.wb_sunny, text: 'Daily Lucky Color & Number'),
+          SizedBox(height: AppSpacing.lg),
+          _FeatureItem(icon: Icons.explore, text: 'Auspicious Directions'),
+          SizedBox(height: AppSpacing.lg),
+          _FeatureItem(icon: Icons.access_time, text: 'Lucky Time Predictions'),
+          SizedBox(height: AppSpacing.lg),
+          _FeatureItem(icon: Icons.notifications, text: 'Daily Notifications'),
+        ],
+      ),
     );
   }
 }
@@ -118,14 +140,16 @@ class _FeatureItem extends StatelessWidget {
         Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: AppColors.primary,
           ),
-          child: Icon(icon, size: 20, color: AppColors.accent),
+          child: Icon(icon, size: 22, color: AppColors.accent),
         ),
         const SizedBox(width: AppSpacing.lg),
-        Text(text, style: AppTypography.body),
+        Expanded(
+          child: Text(text, style: AppTypography.body),
+        ),
       ],
     );
   }
