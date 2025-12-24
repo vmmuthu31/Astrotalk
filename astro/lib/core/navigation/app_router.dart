@@ -60,13 +60,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/nakshatra-mapping',
         builder: (context, state) {
-          final params = state.extra as Map<String, dynamic>?;
+          final params = state.extra as Map<String, dynamic>? ?? {};
           return NakshatraMappingScreen(
-            name: params?['name'] ?? '',
-            birthDate: params?['birthDate'] ?? '',
-            birthTime: params?['birthTime'] ?? '',
-            birthPlace: params?['birthPlace'] ?? '',
-            language: params?['language'] ?? 'en',
+            name: params['name'] ?? '',
+            birthDate: params['birthDate'] ?? '',
+            birthTime: params['birthTime'] ?? '',
+            birthPlace: params['birthPlace'] ?? '',
+            language: params['language'] ?? 'en',
           );
         },
       ),

@@ -36,12 +36,12 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
   void _showDatePicker() {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => Container(
+      builder: (ctx) => Container(
         height: 300,
         padding: const EdgeInsets.all(AppSpacing.xl),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.backgroundDefault,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppBorderRadius.lg)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppBorderRadius.lg)),
         ),
         child: Column(
           children: [
@@ -57,7 +57,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
             ),
             AppButton(
               text: 'Done',
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
             ),
           ],
         ),
@@ -68,12 +68,12 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
   void _showTimePicker() {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => Container(
+      builder: (ctx) => Container(
         height: 300,
         padding: const EdgeInsets.all(AppSpacing.xl),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: AppColors.backgroundDefault,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppBorderRadius.lg)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(AppBorderRadius.lg)),
         ),
         child: Column(
           children: [
@@ -87,7 +87,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
             ),
             AppButton(
               text: 'Done',
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(ctx),
             ),
           ],
         ),
@@ -98,7 +98,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
   void _handleContinue() {
     if (!_isFormValid) return;
 
-    context.go('/nakshatra-mapping', extra: {
+    context.push('/nakshatra-mapping', extra: {
       'name': _nameController.text.trim(),
       'birthDate': DateFormat('yyyy-MM-dd').format(_birthDate),
       'birthTime': DateFormat('HH:mm').format(_birthTime),
@@ -121,7 +121,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   IconButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.go('/language'),
                     icon: const Icon(Icons.arrow_back, color: AppColors.text),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
