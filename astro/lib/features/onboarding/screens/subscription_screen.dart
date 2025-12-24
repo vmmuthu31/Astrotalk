@@ -6,52 +6,102 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/star_field.dart';
-import '../../../shared/widgets/app_button.dart';
 import '../../../shared/models/user.dart';
 
-class SubscriptionScreen extends ConsumerWidget {
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final params = GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
-    
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  bool _isProcessing = false;
+
+  Map<String, dynamic> get _params =>
+      GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
+
+  void _handleSubscribe() async {
+    setState(() => _isProcessing = true);
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (!mounted) return;
+    setState(() => _isProcessing = false);
+    await _completeOnboarding();
+  }
+
+  void _handleSkip() async {
+    await _completeOnboarding();
+  }
+
+  Future<void> _completeOnboarding() async {
+    final user = User(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: _params['name'] ?? 'User',
+      birthDate: _params['birthDate'],
+      birthTime: _params['birthTime'],
+      birthPlace: _params['birthPlace'],
+      nakshatra: _params['nakshatra'],
+      rashi: _params['rashi'],
+    );
+
+    await ref.read(authProvider.notifier).setUser(user);
+    await ref.read(authProvider.notifier).setOnboarded(true);
+    if (mounted) context.go('/home');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundRoot,
       body: Stack(
         children: [
-          const StarField(count: 30),
+          const StarField(count: 40),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl2),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl2),
               child: Column(
                 children: [
+                  const SizedBox(height: AppSpacing.xl),
                   Align(
-                    alignment: Alignment.topRight,
-                    child: TextButton(
-                      onPressed: () => _completeOnboarding(context, ref, params),
-                      child: Text(
-                        'Skip',
-                        style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: _handleSkip,
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: Text(
+                          'Skip',
+                          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                        ),
                       ),
                     ),
                   ),
-                  const Spacer(),
-                  _buildPremiumCard(),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text(
+                    'Unlock Your Daily Bhagya',
+                    style: AppTypography.h2.copyWith(color: AppColors.accent),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Get personalized cosmic guidance every day',
+                    style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xl3),
+                  _buildPricingCard(),
                   const SizedBox(height: AppSpacing.xl3),
                   _buildFeatureList(),
-                  const Spacer(),
-                  AppButton(
-                    text: 'Start 7-Day Free Trial',
-                    onPressed: () => _completeOnboarding(context, ref, params),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.xl3),
+                  _buildSubscribeButton(),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildFreeTrialButton(),
+                  const SizedBox(height: AppSpacing.xl2),
                   Text(
-                    'Then ₹99/month • Cancel anytime',
+                    'By subscribing, you agree to our Terms of Service and Privacy Policy. Cancel anytime.',
                     style: AppTypography.small.copyWith(color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.xl2),
                 ],
               ),
             ),
@@ -61,44 +111,64 @@ class SubscriptionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPremiumCard() {
+  Widget _buildPricingCard() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.primary,
-            AppColors.primary.withAlpha(179),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent.withAlpha(51),
-            blurRadius: 20,
-            spreadRadius: 2,
+            color: Colors.black.withAlpha(51),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xs),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.accent.withAlpha(51),
+              color: AppColors.secondary,
+              borderRadius: BorderRadius.circular(AppBorderRadius.full),
             ),
-            child: const Icon(Icons.auto_awesome, size: 40, color: AppColors.accent),
+            child: Text(
+              'Most Popular',
+              style: AppTypography.small.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.buttonText,
+              ),
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Bhagya Premium', style: AppTypography.h3.copyWith(color: AppColors.accent)),
+          Text('Monthly Plan', style: AppTypography.h4),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text('Rs.', style: AppTypography.h4.copyWith(color: AppColors.accent)),
+              Text(
+                '99',
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accent,
+                ),
+              ),
+              Text(
+                '/month',
+                style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Unlock your complete cosmic potential',
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
+            'via UPI AutoPay',
+            style: AppTypography.small.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -107,31 +177,23 @@ class SubscriptionScreen extends ConsumerWidget {
 
   Widget _buildFeatureList() {
     final features = [
-      'Personalized daily predictions',
-      'Lucky color, number & direction',
-      'Auspicious time calculations',
-      'Daily mantras & guidance',
-      'Ad-free experience',
+      'Daily Lucky Color & Number',
+      'Auspicious Direction Guidance',
+      'Personalized Lucky Time',
+      'Daily Mantra Recommendations',
+      'Push Notifications',
+      'Nakshatra Birth Chart',
     ];
 
     return Column(
       children: features
           .map((feature) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.success,
-                      ),
-                      child: const Icon(Icons.check, size: 14, color: Colors.white),
-                    ),
+                    const Icon(Icons.check_circle, size: 20, color: AppColors.success),
                     const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(feature, style: AppTypography.body),
-                    ),
+                    Expanded(child: Text(feature, style: AppTypography.body)),
                   ],
                 ),
               ))
@@ -139,19 +201,56 @@ class SubscriptionScreen extends ConsumerWidget {
     );
   }
 
-  void _completeOnboarding(BuildContext context, WidgetRef ref, Map<String, dynamic> params) async {
-    final user = User(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: params['name'] ?? 'User',
-      birthDate: params['birthDate'],
-      birthTime: params['birthTime'],
-      birthPlace: params['birthPlace'],
-      nakshatra: params['nakshatra'],
-      rashi: params['rashi'],
+  Widget _buildSubscribeButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: AppSpacing.buttonHeight,
+      child: ElevatedButton(
+        onPressed: _isProcessing ? null : _handleSubscribe,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.secondary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppBorderRadius.md),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.credit_card, size: 20, color: AppColors.buttonText),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              _isProcessing ? 'Processing...' : 'Subscribe with UPI AutoPay',
+              style: AppTypography.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.buttonText,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
 
-    await ref.read(authProvider.notifier).setUser(user);
-    await ref.read(authProvider.notifier).setOnboarded(true);
-    if (context.mounted) context.go('/home');
+  Widget _buildFreeTrialButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: AppSpacing.buttonHeight,
+      child: OutlinedButton(
+        onPressed: _handleSkip,
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppColors.accent, width: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppBorderRadius.md),
+          ),
+        ),
+        child: Text(
+          'Start 7-Day Free Trial',
+          style: AppTypography.body.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.accent,
+          ),
+        ),
+      ),
+    );
   }
 }

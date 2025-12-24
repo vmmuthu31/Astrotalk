@@ -2,94 +2,65 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
-class StarField extends StatefulWidget {
+class StarField extends StatelessWidget {
   final int count;
 
   const StarField({super.key, this.count = 50});
 
   @override
-  State<StarField> createState() => _StarFieldState();
-}
-
-class _StarFieldState extends State<StarField> with TickerProviderStateMixin {
-  late List<Star> stars;
-
-  @override
-  void initState() {
-    super.initState();
-    stars = List.generate(widget.count, (_) => Star(this));
-  }
-
-  @override
-  void dispose() {
-    for (final star in stars) {
-      star.controller.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Stack(
-          children: stars.map((star) {
-            return Positioned(
-              left: star.x * constraints.maxWidth,
-              top: star.y * constraints.maxHeight,
-              child: AnimatedBuilder(
-                animation: star.controller,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: star.opacity.value,
-                    child: Container(
-                      width: star.size,
-                      height: star.size,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.accent,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.accent.withOpacity(0.5),
-                            blurRadius: star.size * 2,
-                            spreadRadius: star.size / 2,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          }).toList(),
-        );
-      },
+    return CustomPaint(
+      size: Size.infinite,
+      painter: _StarFieldPainter(count: count),
     );
   }
 }
 
-class Star {
+class _StarFieldPainter extends CustomPainter {
+  final int count;
+  final List<_Star> _stars;
+  
+  _StarFieldPainter({required this.count}) : _stars = [] {
+    final random = Random(42);
+    for (int i = 0; i < count; i++) {
+      _stars.add(_Star(
+        x: random.nextDouble(),
+        y: random.nextDouble(),
+        size: 1 + random.nextDouble() * 2.5,
+        opacity: 0.3 + random.nextDouble() * 0.7,
+      ));
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    
+    final paint = Paint();
+    
+    for (final star in _stars) {
+      paint.color = AppColors.accent.withAlpha((star.opacity * 255).toInt());
+      
+      final shadowPaint = Paint()
+        ..color = AppColors.accent.withAlpha((star.opacity * 128).toInt())
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, star.size * 2);
+      
+      final offset = Offset(star.x * size.width, star.y * size.height);
+      
+      canvas.drawCircle(offset, star.size * 2, shadowPaint);
+      canvas.drawCircle(offset, star.size, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StarFieldPainter oldDelegate) => false;
+}
+
+class _Star {
   final double x;
   final double y;
   final double size;
-  final AnimationController controller;
-  late Animation<double> opacity;
+  final double opacity;
 
-  Star(TickerProvider vsync)
-      : x = Random().nextDouble(),
-        y = Random().nextDouble(),
-        size = 1 + Random().nextDouble() * 2.5,
-        controller = AnimationController(
-          duration: Duration(milliseconds: 1500 + Random().nextInt(1000)),
-          vsync: vsync,
-        ) {
-    opacity = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
-    );
-    controller.repeat(reverse: true);
-    Future.delayed(Duration(milliseconds: Random().nextInt(2000)), () {
-      if (controller.isAnimating == false) return;
-      controller.forward();
-    });
-  }
+  _Star({required this.x, required this.y, required this.size, required this.opacity});
 }
