@@ -1,0 +1,212 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/star_field.dart';
+import '../../../shared/widgets/app_button.dart';
+
+class BirthDetailsScreen extends StatefulWidget {
+  final String language;
+
+  const BirthDetailsScreen({super.key, this.language = 'en'});
+
+  @override
+  State<BirthDetailsScreen> createState() => _BirthDetailsScreenState();
+}
+
+class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
+  final _nameController = TextEditingController();
+  final _placeController = TextEditingController();
+  DateTime _birthDate = DateTime(1995, 1, 1);
+  DateTime _birthTime = DateTime(1995, 1, 1, 6, 0);
+
+  bool get _isFormValid =>
+      _nameController.text.trim().isNotEmpty && _placeController.text.trim().isNotEmpty;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _placeController.dispose();
+    super.dispose();
+  }
+
+  void _showDatePicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 300,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundDefault,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppBorderRadius.lg)),
+        ),
+        child: Column(
+          children: [
+            Text('Select Date of Birth', style: AppTypography.h4),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: _birthDate,
+                maximumDate: DateTime.now(),
+                minimumDate: DateTime(1920),
+                onDateTimeChanged: (date) => setState(() => _birthDate = date),
+              ),
+            ),
+            AppButton(
+              text: 'Done',
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTimePicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => Container(
+        height: 300,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundDefault,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppBorderRadius.lg)),
+        ),
+        child: Column(
+          children: [
+            Text('Select Time of Birth', style: AppTypography.h4),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.time,
+                initialDateTime: _birthTime,
+                onDateTimeChanged: (time) => setState(() => _birthTime = time),
+              ),
+            ),
+            AppButton(
+              text: 'Done',
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleContinue() {
+    if (!_isFormValid) return;
+
+    context.go('/nakshatra-mapping', extra: {
+      'name': _nameController.text.trim(),
+      'birthDate': DateFormat('yyyy-MM-dd').format(_birthDate),
+      'birthTime': DateFormat('HH:mm').format(_birthTime),
+      'birthPlace': _placeController.text.trim(),
+      'language': widget.language,
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundRoot,
+      body: Stack(
+        children: [
+          const StarField(count: 40),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back, color: AppColors.text),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('Your Birth Details', style: AppTypography.h2),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'We use this to calculate your personalized daily predictions',
+                    style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: AppSpacing.xl3),
+                  _buildInputLabel('Your Name'),
+                  TextField(
+                    controller: _nameController,
+                    style: AppTypography.body,
+                    decoration: const InputDecoration(hintText: 'Enter your name'),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: AppSpacing.xl2),
+                  _buildInputLabel('Date of Birth'),
+                  _buildPickerButton(
+                    icon: Icons.calendar_today,
+                    text: DateFormat('d MMMM yyyy').format(_birthDate),
+                    onTap: _showDatePicker,
+                  ),
+                  const SizedBox(height: AppSpacing.xl2),
+                  _buildInputLabel('Time of Birth'),
+                  _buildPickerButton(
+                    icon: Icons.access_time,
+                    text: DateFormat('hh:mm a').format(_birthTime),
+                    onTap: _showTimePicker,
+                  ),
+                  const SizedBox(height: AppSpacing.xl2),
+                  _buildInputLabel('Place of Birth'),
+                  TextField(
+                    controller: _placeController,
+                    style: AppTypography.body,
+                    decoration: const InputDecoration(hintText: 'e.g., Lucknow, Uttar Pradesh'),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: AppSpacing.xl3),
+                  AppButton(
+                    text: 'Continue',
+                    onPressed: _isFormValid ? _handleContinue : null,
+                    backgroundColor: _isFormValid ? AppColors.secondary : AppColors.backgroundSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Text(text, style: AppTypography.small),
+    );
+  }
+
+  Widget _buildPickerButton({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: AppSpacing.inputHeight,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundDefault,
+          borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: AppColors.accent),
+            const SizedBox(width: AppSpacing.md),
+            Text(text, style: AppTypography.body),
+          ],
+        ),
+      ),
+    );
+  }
+}
