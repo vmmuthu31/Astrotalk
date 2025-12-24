@@ -7,12 +7,15 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../shared/models/user.dart';
 
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final params = GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
+    
     return Scaffold(
       backgroundColor: AppColors.backgroundRoot,
       body: Stack(
@@ -26,7 +29,7 @@ class SubscriptionScreen extends ConsumerWidget {
                   Align(
                     alignment: Alignment.topRight,
                     child: TextButton(
-                      onPressed: () => _completeOnboarding(context, ref),
+                      onPressed: () => _completeOnboarding(context, ref, params),
                       child: Text(
                         'Skip',
                         style: AppTypography.body.copyWith(color: AppColors.textSecondary),
@@ -40,7 +43,7 @@ class SubscriptionScreen extends ConsumerWidget {
                   const Spacer(),
                   AppButton(
                     text: 'Start 7-Day Free Trial',
-                    onPressed: () => _completeOnboarding(context, ref),
+                    onPressed: () => _completeOnboarding(context, ref, params),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
@@ -65,7 +68,7 @@ class SubscriptionScreen extends ConsumerWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.7),
+            AppColors.primary.withAlpha(179),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -73,7 +76,7 @@ class SubscriptionScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent.withOpacity(0.2),
+            color: AppColors.accent.withAlpha(51),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -85,7 +88,7 @@ class SubscriptionScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.accent.withOpacity(0.2),
+              color: AppColors.accent.withAlpha(51),
             ),
             child: const Icon(Icons.auto_awesome, size: 40, color: AppColors.accent),
           ),
@@ -126,7 +129,9 @@ class SubscriptionScreen extends ConsumerWidget {
                       child: const Icon(Icons.check, size: 14, color: Colors.white),
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    Text(feature, style: AppTypography.body),
+                    Expanded(
+                      child: Text(feature, style: AppTypography.body),
+                    ),
                   ],
                 ),
               ))
@@ -134,7 +139,18 @@ class SubscriptionScreen extends ConsumerWidget {
     );
   }
 
-  void _completeOnboarding(BuildContext context, WidgetRef ref) async {
+  void _completeOnboarding(BuildContext context, WidgetRef ref, Map<String, dynamic> params) async {
+    final user = User(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: params['name'] ?? 'User',
+      birthDate: params['birthDate'],
+      birthTime: params['birthTime'],
+      birthPlace: params['birthPlace'],
+      nakshatra: params['nakshatra'],
+      rashi: params['rashi'],
+    );
+
+    await ref.read(authProvider.notifier).setUser(user);
     await ref.read(authProvider.notifier).setOnboarded(true);
     if (context.mounted) context.go('/home');
   }

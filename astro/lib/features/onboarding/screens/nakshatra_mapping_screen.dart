@@ -1,13 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/providers/auth_provider.dart';
-import '../../../shared/models/user.dart';
 
-class NakshatraMappingScreen extends ConsumerStatefulWidget {
+class NakshatraMappingScreen extends StatefulWidget {
   final String name;
   final String birthDate;
   final String birthTime;
@@ -24,10 +21,10 @@ class NakshatraMappingScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<NakshatraMappingScreen> createState() => _NakshatraMappingScreenState();
+  State<NakshatraMappingScreen> createState() => _NakshatraMappingScreenState();
 }
 
-class _NakshatraMappingScreenState extends ConsumerState<NakshatraMappingScreen>
+class _NakshatraMappingScreenState extends State<NakshatraMappingScreen>
     with TickerProviderStateMixin {
   late AnimationController _starController;
   late AnimationController _progressController;
@@ -101,18 +98,14 @@ class _NakshatraMappingScreenState extends ConsumerState<NakshatraMappingScreen>
     final nakshatra = _nakshatras[_random.nextInt(_nakshatras.length)];
     final rashi = _rashis[_random.nextInt(_rashis.length)];
 
-    final user = User(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: widget.name,
-      birthDate: widget.birthDate,
-      birthTime: widget.birthTime,
-      birthPlace: widget.birthPlace,
-      nakshatra: nakshatra,
-      rashi: rashi,
-    );
-
-    await ref.read(authProvider.notifier).setUser(user);
-    if (mounted) context.go('/subscription');
+    context.go('/subscription', extra: {
+      'name': widget.name,
+      'birthDate': widget.birthDate,
+      'birthTime': widget.birthTime,
+      'birthPlace': widget.birthPlace,
+      'nakshatra': nakshatra,
+      'rashi': rashi,
+    });
   }
 
   @override
@@ -191,7 +184,7 @@ class _ConstellationPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final starPaint = Paint()..color = AppColors.accent;
     final linePaint = Paint()
-      ..color = AppColors.accent.withOpacity(0.5)
+      ..color = AppColors.accent.withAlpha(128)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -213,7 +206,7 @@ class _ConstellationPainter extends CustomPainter {
       final animatedProgress = ((progress - star.delay) % 1.0).clamp(0.0, 1.0);
       final opacity = 0.5 + 0.5 * sin(animatedProgress * pi * 2);
       
-      starPaint.color = AppColors.accent.withOpacity(opacity);
+      starPaint.color = AppColors.accent.withAlpha((opacity * 255).toInt());
       final radius = i == 0 ? 8.0 : 5.0;
       canvas.drawCircle(
         Offset(star.x * size.width, star.y * size.height),
