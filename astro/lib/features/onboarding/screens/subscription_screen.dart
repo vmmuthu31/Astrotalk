@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/razorpay_service.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../../../shared/models/user.dart';
 
@@ -16,24 +18,107 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 }
 
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
-  bool _isProcessing = false;
+  bool _isSubscribeLoading = false;
+  bool _isTrialLoading = false;
+  late RazorpayService _razorpayService;
+
+  bool get _isAnyLoading => _isSubscribeLoading || _isTrialLoading;
 
   Map<String, dynamic> get _params =>
       GoRouterState.of(context).extra as Map<String, dynamic>? ?? {};
 
-  void _handleSubscribe() async {
-    setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-    setState(() => _isProcessing = false);
-    await _completeOnboarding();
+  @override
+  void initState() {
+    super.initState();
+    _razorpayService = RazorpayService();
+    _razorpayService.onPaymentSuccess = _handlePaymentSuccess;
+    _razorpayService.onPaymentFailure = _handlePaymentFailure;
+  }
+
+  @override
+  void dispose() {
+    _razorpayService.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    setState(() {
+      _isSubscribeLoading = false;
+      _isTrialLoading = false;
+    });
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Payment Successful! ID: ${response.paymentId}'),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+    
+    await _completeOnboarding(isSubscribed: true);
+  }
+
+  void _handlePaymentFailure(PaymentFailureResponse response) {
+    setState(() {
+      _isSubscribeLoading = false;
+      _isTrialLoading = false;
+    });
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment Failed: ${response.message ?? "Unknown error"}'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleSubscribe({bool isTrial = false}) async {
+    setState(() {
+      if (isTrial) {
+        _isTrialLoading = true;
+      } else {
+        _isSubscribeLoading = true;
+      }
+    });
+
+    final success = await _razorpayService.openNativeCheckout(
+      customerName: _params['name'] ?? 'User',
+      customerEmail: '',
+      customerPhone: '',
+      isTrial: isTrial,
+    );
+
+    if (!success && mounted) {
+      setState(() {
+        _isSubscribeLoading = false;
+        _isTrialLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not start payment. Please try again.'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
   }
 
   void _handleSkip() async {
-    await _completeOnboarding();
+    await _completeOnboarding(isSubscribed: false);
   }
 
-  Future<void> _completeOnboarding() async {
+  Future<void> _completeOnboarding({bool isSubscribed = false}) async {
     final user = User(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: _params['name'] ?? 'User',
@@ -42,6 +127,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       birthPlace: _params['birthPlace'],
       nakshatra: _params['nakshatra'],
       rashi: _params['rashi'],
+      isSubscribed: isSubscribed,
     );
 
     await ref.read(authProvider.notifier).setUser(user);
@@ -65,17 +151,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
-                      onTap: _handleSkip,
+                      onTap: _isAnyLoading ? null : _handleSkip,
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         child: Text(
                           'Skip',
-                          style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                          style: AppTypography.body.copyWith(
+                            color: _isAnyLoading ? AppColors.textSecondary.withAlpha(100) : AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
                     'Unlock Your Daily Bhagya',
                     style: AppTypography.h2.copyWith(color: AppColors.accent),
@@ -87,17 +175,17 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     style: AppTypography.body.copyWith(color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: AppSpacing.xl3),
+                  const SizedBox(height: AppSpacing.xl2),
                   _buildPricingCard(),
-                  const SizedBox(height: AppSpacing.xl3),
+                  const SizedBox(height: AppSpacing.xl2),
                   _buildFeatureList(),
-                  const SizedBox(height: AppSpacing.xl3),
+                  const SizedBox(height: AppSpacing.xl2),
                   _buildSubscribeButton(),
                   const SizedBox(height: AppSpacing.lg),
                   _buildFreeTrialButton(),
-                  const SizedBox(height: AppSpacing.xl2),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'By subscribing, you agree to our Terms of Service and Privacy Policy. Cancel anytime.',
+                    'Secured by Razorpay • Cancel anytime',
                     style: AppTypography.small.copyWith(color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
@@ -150,8 +238,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text('Rs.', style: AppTypography.h4.copyWith(color: AppColors.accent)),
-              Text(
+              Text('₹', style: AppTypography.h4.copyWith(color: AppColors.accent)),
+              const Text(
                 '99',
                 style: TextStyle(
                   fontSize: 48,
@@ -165,10 +253,24 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'via UPI AutoPay',
-            style: AppTypography.small.copyWith(color: AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(AppBorderRadius.sm),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.account_balance, size: 16, color: AppColors.accent),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'via UPI AutoPay',
+                  style: AppTypography.small.copyWith(color: AppColors.accent),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -188,7 +290,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     return Column(
       children: features
           .map((feature) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
                 child: Row(
                   children: [
                     const Icon(Icons.check_circle, size: 20, color: AppColors.success),
@@ -206,9 +308,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       width: double.infinity,
       height: AppSpacing.buttonHeight,
       child: ElevatedButton(
-        onPressed: _isProcessing ? null : _handleSubscribe,
+        onPressed: _isAnyLoading ? null : () => _handleSubscribe(isTrial: false),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.secondary,
+          disabledBackgroundColor: AppColors.secondary.withAlpha(128),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppBorderRadius.md),
           ),
@@ -216,15 +319,34 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.credit_card, size: 20, color: AppColors.buttonText),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              _isProcessing ? 'Processing...' : 'Subscribe with UPI AutoPay',
-              style: AppTypography.body.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.buttonText,
+            if (_isSubscribeLoading) ...[
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                ),
               ),
-            ),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                'Processing...',
+                style: AppTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.buttonText,
+                ),
+              ),
+            ] else ...[
+              const Icon(Icons.account_balance, size: 20, color: AppColors.buttonText),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Subscribe with UPI AutoPay',
+                style: AppTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.buttonText,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -236,19 +358,46 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       width: double.infinity,
       height: AppSpacing.buttonHeight,
       child: OutlinedButton(
-        onPressed: _handleSkip,
+        onPressed: _isAnyLoading ? null : () => _handleSubscribe(isTrial: true),
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.accent, width: 2),
+          side: BorderSide(
+            color: _isAnyLoading ? AppColors.textSecondary : AppColors.accent, 
+            width: 2,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppBorderRadius.md),
           ),
         ),
-        child: Text(
-          'Start 7-Day Free Trial',
-          style: AppTypography.body.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.accent,
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isTrialLoading) ...[
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                'Processing...',
+                style: AppTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.accent,
+                ),
+              ),
+            ] else ...[
+              Text(
+                'Start 7-Day Free Trial',
+                style: AppTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: _isAnyLoading ? AppColors.textSecondary : AppColors.accent,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

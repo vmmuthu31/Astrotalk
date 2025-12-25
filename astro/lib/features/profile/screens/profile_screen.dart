@@ -1,16 +1,119 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/razorpay_service.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  late RazorpayService _razorpayService;
+  bool _isUpgradeLoading = false;
+  bool _isTrialLoading = false;
+
+  bool get _isAnyLoading => _isUpgradeLoading || _isTrialLoading;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpayService = RazorpayService();
+    _razorpayService.onPaymentSuccess = _handlePaymentSuccess;
+    _razorpayService.onPaymentFailure = _handlePaymentFailure;
+  }
+
+  @override
+  void dispose() {
+    _razorpayService.dispose();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    setState(() {
+      _isUpgradeLoading = false;
+      _isTrialLoading = false;
+    });
+    
+    final currentUser = ref.read(authProvider).user;
+    if (currentUser != null) {
+      final updatedUser = currentUser.copyWith(isSubscribed: true);
+      await ref.read(authProvider.notifier).setUser(updatedUser);
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('Subscription activated!')),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
+  }
+
+  void _handlePaymentFailure(PaymentFailureResponse response) {
+    setState(() {
+      _isUpgradeLoading = false;
+      _isTrialLoading = false;
+    });
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment Failed: ${response.message ?? "Unknown error"}'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleUpgrade({bool isTrial = false}) async {
+    final user = ref.read(authProvider).user;
+
+    setState(() {
+      if (isTrial) {
+        _isTrialLoading = true;
+      } else {
+        _isUpgradeLoading = true;
+      }
+    });
+
+    final success = await _razorpayService.openNativeCheckout(
+      customerName: user?.name ?? 'User',
+      customerEmail: '',
+      customerPhone: '',
+      isTrial: isTrial,
+    );
+
+    if (!success && mounted) {
+      setState(() {
+        _isUpgradeLoading = false;
+        _isTrialLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not start payment. Please try again.'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
@@ -106,7 +209,7 @@ class ProfileScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withAlpha(38),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -117,32 +220,141 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.workspace_premium, size: 24, color: AppColors.accent),
-              const SizedBox(width: AppSpacing.md),
-              Text(
-                isSubscribed ? 'Premium Member' : 'Free Trial',
-                style: AppTypography.h4.copyWith(color: AppColors.accent),
+              Icon(
+                isSubscribed ? Icons.workspace_premium : Icons.star_border,
+                size: 24,
+                color: AppColors.accent,
               ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  isSubscribed ? 'Premium Member' : 'Free Trial',
+                  style: AppTypography.h4.copyWith(color: AppColors.accent),
+                ),
+              ),
+              if (isSubscribed)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withAlpha(50),
+                    borderRadius: BorderRadius.circular(AppBorderRadius.full),
+                  ),
+                  child: Text(
+                    'Active',
+                    style: AppTypography.small.copyWith(color: AppColors.success),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(
-            isSubscribed
-                ? 'You have full access to all features'
-                : 'Upgrade to unlock all premium features',
-            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-          ),
-          if (!isSubscribed) ...[
+          if (isSubscribed) ...[
+            Text(
+              'You have full access to all premium features',
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundSecondary,
+                borderRadius: BorderRadius.circular(AppBorderRadius.md),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Plan', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                      Text('Monthly', style: AppTypography.body),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Amount', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                      Text('₹99/month', style: AppTypography.body.copyWith(color: AppColors.accent)),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Payment', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                      Text('UPI AutoPay', style: AppTypography.body),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            Text(
+              'Upgrade to unlock all premium features',
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            ),
             const SizedBox(height: AppSpacing.lg),
             SizedBox(
               width: double.infinity,
+              height: 48,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _isAnyLoading ? null : () => _handleUpgrade(isTrial: false),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.secondary,
-                  minimumSize: const Size(double.infinity, 44),
+                  disabledBackgroundColor: AppColors.secondary.withAlpha(128),
                 ),
-                child: const Text('Upgrade Now'),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_isUpgradeLoading) ...[
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      const Text('Processing...'),
+                    ] else
+                      const Text('Upgrade Now - ₹99/month'),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton(
+                onPressed: _isAnyLoading ? null : () => _handleUpgrade(isTrial: true),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: _isAnyLoading ? AppColors.textSecondary : AppColors.accent,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_isTrialLoading) ...[
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Text('Processing...', style: TextStyle(color: AppColors.accent)),
+                    ] else
+                      Text(
+                        'Start 7-Day Free Trial',
+                        style: TextStyle(color: _isAnyLoading ? AppColors.textSecondary : AppColors.accent),
+                      ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -181,7 +393,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              if (!isLast) Divider(color: Colors.white.withOpacity(0.1), height: 1),
+              if (!isLast) Divider(color: Colors.white.withAlpha(25), height: 1),
             ],
           );
         }).toList(),
