@@ -1,4 +1,4 @@
-package com.example.astro
+package com.bhagya.astro
 
 import io.flutter.embedding.android.FlutterActivity
 
