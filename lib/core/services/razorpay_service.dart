@@ -4,24 +4,37 @@ import 'package:http/http.dart' as http;
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../config/app_config.dart';
 
+// Conditional import for web
+import 'razorpay_web_stub.dart'
+    if (dart.library.html) 'razorpay_web_impl.dart' as razorpay_web;
+
 typedef PaymentSuccessCallback = void Function(PaymentSuccessResponse response);
 typedef PaymentFailureCallback = void Function(PaymentFailureResponse response);
 typedef ExternalWalletCallback = void Function(ExternalWalletResponse response);
 
+typedef WebPaymentSuccessCallback = void Function(String? paymentId, String? orderId, String? signature);
+typedef WebPaymentFailureCallback = void Function(int? code, String? message);
+
 class RazorpayService {
-  late Razorpay _razorpay;
+  Razorpay? _razorpay;
   String? _planId;
   String? _currentSubscriptionId;
+  bool get _isWebPlatform => kIsWeb;
   
   PaymentSuccessCallback? onPaymentSuccess;
   PaymentFailureCallback? onPaymentFailure;
   ExternalWalletCallback? onExternalWallet;
+  
+  WebPaymentSuccessCallback? onWebPaymentSuccess;
+  WebPaymentFailureCallback? onWebPaymentFailure;
 
   RazorpayService() {
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    if (!_isWebPlatform) {
+      _razorpay = Razorpay();
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+      _razorpay!.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+      _razorpay!.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    }
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
@@ -166,7 +179,7 @@ class RazorpayService {
 
       final subscriptionId = subscription['id'] as String;
 
-      var options = {
+      final options = {
         'key': AppConfig.razorpayKeyId,
         'subscription_id': subscriptionId,
         'name': 'Bhagya Premium',
@@ -186,8 +199,27 @@ class RazorpayService {
         },
       };
 
-      _razorpay.open(options);
-      return true;
+      if (_isWebPlatform) {
+        razorpay_web.openRazorpayCheckout(
+          options: options,
+          onSuccess: (paymentId, orderId, signature) {
+            debugPrint('Web Payment Success: $paymentId');
+            onWebPaymentSuccess?.call(paymentId, orderId, signature);
+            final response = PaymentSuccessResponse(paymentId, orderId, signature, null);
+            onPaymentSuccess?.call(response);
+          },
+          onFailure: (code, message) {
+            debugPrint('Web Payment Failed: $code - $message');
+            onWebPaymentFailure?.call(code, message);
+            final response = PaymentFailureResponse(code ?? 0, message ?? 'Payment failed', null);
+            onPaymentFailure?.call(response);
+          },
+        );
+        return true;
+      } else {
+        _razorpay?.open(options);
+        return true;
+      }
     } catch (e) {
       debugPrint('Error opening Razorpay: $e');
       return false;
@@ -195,6 +227,6 @@ class RazorpayService {
   }
 
   void dispose() {
-    _razorpay.clear();
+    _razorpay?.clear();
   }
 }

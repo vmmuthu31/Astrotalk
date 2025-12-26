@@ -17,22 +17,30 @@ class WelcomeScreen extends StatelessWidget {
         children: [
           const StarField(count: 80),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl2),
-              child: Column(
-                children: [
-                  const Spacer(),
-                  _buildLogoSection(),
-                  const SizedBox(height: AppSpacing.xl4),
-                  _buildFeatureSection(),
-                  const Spacer(),
-                  AppButton(
-                    text: 'Get Started',
-                    onPressed: () => context.go('/language'),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xl2),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.xl2 * 2),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const SizedBox(height: AppSpacing.xl2),
+                        _buildLogoSection(),
+                        const SizedBox(height: AppSpacing.xl4),
+                        _buildFeatureSection(),
+                        const SizedBox(height: AppSpacing.xl4),
+                        AppButton(
+                          text: 'Get Started',
+                          onPressed: () => context.go('/language'),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],
