@@ -25,7 +25,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   late Animation<double> _headerOpacity;
   bool _isSpeaking = false;
   final FlutterTts _tts = FlutterTts();
-  Map<String, dynamic>? _prediction;
 
   static const Map<String, IconData> _directionIcons = {
     'North': Icons.arrow_upward,
