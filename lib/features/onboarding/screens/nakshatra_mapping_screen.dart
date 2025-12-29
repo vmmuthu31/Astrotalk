@@ -1,8 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/services/astrology_service.dart';
 
 class NakshatraMappingScreen extends StatefulWidget {
   final String name;
@@ -31,19 +33,6 @@ class _NakshatraMappingScreenState extends State<NakshatraMappingScreen>
   final List<_StarPoint> _stars = [];
   final Random _random = Random();
   String _statusText = 'Reading the stars...';
-
-  static const List<String> _nakshatras = [
-    'Ashwini', 'Bharani', 'Krittika', 'Rohini', 'Mrigashira', 'Ardra',
-    'Punarvasu', 'Pushya', 'Ashlesha', 'Magha', 'Purva Phalguni',
-    'Uttara Phalguni', 'Hasta', 'Chitra', 'Swati', 'Vishakha', 'Anuradha',
-    'Jyeshtha', 'Mula', 'Purva Ashadha', 'Uttara Ashadha', 'Shravana',
-    'Dhanishta', 'Shatabhisha', 'Purva Bhadrapada', 'Uttara Bhadrapada', 'Revati'
-  ];
-
-  static const List<String> _rashis = [
-    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
-    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
-  ];
 
   @override
   void initState() {
@@ -95,8 +84,9 @@ class _NakshatraMappingScreenState extends State<NakshatraMappingScreen>
     await Future.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
-    final nakshatra = _nakshatras[_random.nextInt(_nakshatras.length)];
-    final rashi = _rashis[_random.nextInt(_rashis.length)];
+    final birthDate = DateFormat('yyyy-MM-dd').parse(widget.birthDate);
+    final rashi = AstrologyService.getRashiFromDate(birthDate);
+    final nakshatra = AstrologyService.getNakshatraFromDate(birthDate, widget.birthTime);
 
     context.go('/subscription', extra: {
       'name': widget.name,

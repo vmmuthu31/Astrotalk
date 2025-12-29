@@ -8,8 +8,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/astrology_service.dart';
 import '../../../shared/widgets/star_field.dart';
-import '../../../shared/models/daily_prediction.dart';
 import '../widgets/lucky_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -25,7 +25,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   late Animation<double> _headerOpacity;
   bool _isSpeaking = false;
   final FlutterTts _tts = FlutterTts();
-  final DailyPrediction _prediction = DailyPrediction.mock();
+  Map<String, dynamic>? _prediction;
 
   static const Map<String, IconData> _directionIcons = {
     'North': Icons.arrow_upward,
@@ -75,25 +75,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     return 'Shubh Sandhya';
   }
 
-  void _playMantra() async {
-    if (_prediction.mantra == null) return;
+  String _currentMantra = '';
+
+  void _playMantra(String mantra) async {
+    _currentMantra = mantra;
     if (_isSpeaking) {
       await _tts.stop();
       setState(() => _isSpeaking = false);
     } else {
       setState(() => _isSpeaking = true);
-      await _tts.speak(_prediction.mantra!);
+      await _tts.speak(mantra);
     }
   }
 
-  void _shareToWhatsApp() async {
-    final message = '''${_prediction.luckyColor} is my lucky color today!
+  void _shareToWhatsApp(Map<String, dynamic> prediction) async {
+    final message = '''${prediction['luckyColor']} is my lucky color today!
 
 My Daily Bhagya:
-Lucky Number: ${_prediction.luckyNumber}
-Lucky Direction: ${_prediction.luckyDirection}
-Lucky Time: ${_prediction.luckyTime}
-${_prediction.mantra != null ? '\nMantra: "${_prediction.mantra}"' : ''}
+Lucky Number: ${prediction['luckyNumber']}
+Lucky Direction: ${prediction['luckyDirection']}
+Lucky Time: ${prediction['luckyTime']}
+${prediction['mantra'] != null ? '\nMantra: "${prediction['mantra']}"' : ''}
 
 Discover your daily luck with Bhagya app!''';
 
@@ -110,6 +112,11 @@ Discover your daily luck with Bhagya app!''';
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
+
+    final prediction = AstrologyService.generateDailyPrediction(
+      rashi: user?.rashi ?? 'Mesha',
+      date: DateTime.now(),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.backgroundRoot,
@@ -130,6 +137,8 @@ Discover your daily luck with Bhagya app!''';
                   children: [
                     _buildHeader(user?.name ?? 'User'),
                     const SizedBox(height: AppSpacing.xl2),
+                    _buildRashiCard(user?.rashi, user?.nakshatra),
+                    const SizedBox(height: AppSpacing.lg),
                     _buildDateCard(),
                     const SizedBox(height: AppSpacing.xl2),
                     Text(
@@ -139,36 +148,36 @@ Discover your daily luck with Bhagya app!''';
                     const SizedBox(height: AppSpacing.lg),
                     LuckyCard(
                       title: 'Lucky Color',
-                      value: _prediction.luckyColor,
+                      value: prediction['luckyColor'] as String,
                       icon: Icons.water_drop,
-                      colorHex: _prediction.luckyColorHex,
+                      colorHex: prediction['luckyColorHex'] as String,
                       index: 0,
                     ),
                     LuckyCard(
                       title: 'Lucky Number',
-                      value: _prediction.luckyNumber.toString(),
+                      value: prediction['luckyNumber'].toString(),
                       icon: Icons.tag,
                       color: AppColors.accent,
                       index: 1,
                     ),
                     LuckyCard(
                       title: 'Lucky Direction',
-                      value: _prediction.luckyDirection,
-                      icon: _directionIcons[_prediction.luckyDirection] ?? Icons.explore,
+                      value: prediction['luckyDirection'] as String,
+                      icon: _directionIcons[prediction['luckyDirection']] ?? Icons.explore,
                       index: 2,
                     ),
                     LuckyCard(
                       title: 'Lucky Time',
-                      value: _prediction.luckyTime,
+                      value: prediction['luckyTime'] as String,
                       icon: Icons.access_time,
                       index: 3,
                     ),
-                    if (_prediction.mantra != null) ...[
+                    if (prediction['mantra'] != null) ...[
                       const SizedBox(height: AppSpacing.sm),
-                      _buildMantraCard(),
+                      _buildMantraCard(prediction['mantra'] as String),
                     ],
                     const SizedBox(height: AppSpacing.xl),
-                    _buildShareButton(),
+                    _buildShareButton(prediction),
                     const SizedBox(height: AppSpacing.lg),
                     _buildViralHint(),
                   ],
@@ -203,6 +212,49 @@ Discover your daily luck with Bhagya app!''';
     );
   }
 
+  Widget _buildRashiCard(String? rashi, String? nakshatra) {
+    final displayRashi = rashi != null ? '${AstrologyService.getRashiEnglish(rashi)} ($rashi)' : 'Not set';
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.accent.withOpacity(0.2), AppColors.primary.withOpacity(0.3)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppBorderRadius.md),
+        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.stars, size: 24, color: AppColors.accent),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Your Rashi', style: AppTypography.small.copyWith(color: AppColors.textSecondary)),
+                const SizedBox(height: AppSpacing.xs),
+                Text(displayRashi, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                if (nakshatra != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text('Nakshatra: $nakshatra', style: AppTypography.small.copyWith(color: AppColors.textSecondary)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDateCard() {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -223,7 +275,7 @@ Discover your daily luck with Bhagya app!''';
     );
   }
 
-  Widget _buildMantraCard() {
+  Widget _buildMantraCard(String mantra) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl2),
       decoration: BoxDecoration(
@@ -238,7 +290,7 @@ Discover your daily luck with Bhagya app!''';
             children: [
               Text("Today's Mantra", style: AppTypography.small.copyWith(color: AppColors.textSecondary)),
               GestureDetector(
-                onTap: _playMantra,
+                onTap: () => _playMantra(mantra),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                   decoration: BoxDecoration(
@@ -269,7 +321,7 @@ Discover your daily luck with Bhagya app!''';
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            _prediction.mantra!,
+            mantra,
             style: AppTypography.h4.copyWith(color: AppColors.accent, fontStyle: FontStyle.italic),
           ),
         ],
@@ -277,9 +329,9 @@ Discover your daily luck with Bhagya app!''';
     );
   }
 
-  Widget _buildShareButton() {
+  Widget _buildShareButton(Map<String, dynamic> prediction) {
     return GestureDetector(
-      onTap: _shareToWhatsApp,
+      onTap: () => _shareToWhatsApp(prediction),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
