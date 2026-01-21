@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/astrology_service.dart';
 
 class NakshatraMappingScreen extends StatefulWidget {
@@ -32,7 +33,7 @@ class _NakshatraMappingScreenState extends State<NakshatraMappingScreen>
   late AnimationController _progressController;
   final List<_StarPoint> _stars = [];
   final Random _random = Random();
-  String _statusText = 'Reading the stars...';
+  String _statusText = '';
 
   @override
   void initState() {
@@ -65,18 +66,18 @@ class _NakshatraMappingScreenState extends State<NakshatraMappingScreen>
 
   void _updateStatus() {
     final progress = _progressController.value;
-    String newStatus;
+    String newStatusKey;
     if (progress < 0.25) {
-      newStatus = 'Reading the stars...';
+      newStatusKey = 'readingStars';
     } else if (progress < 0.5) {
-      newStatus = 'Mapping your constellation...';
+      newStatusKey = 'mappingConstellation';
     } else if (progress < 0.75) {
-      newStatus = 'Calculating planetary positions...';
+      newStatusKey = 'calculatingPlanets';
     } else {
-      newStatus = 'Preparing your cosmic guide...';
+      newStatusKey = 'preparingGuide';
     }
-    if (newStatus != _statusText) {
-      setState(() => _statusText = newStatus);
+    if (newStatusKey != _statusText) {
+      setState(() => _statusText = newStatusKey);
     }
   }
 
@@ -144,7 +145,7 @@ class _NakshatraMappingScreenState extends State<NakshatraMappingScreen>
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Text(_statusText, style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                    Text(_statusText.isNotEmpty ? context.tr(_statusText) : '', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
                   ],
                 );
               },

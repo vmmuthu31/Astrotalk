@@ -5,6 +5,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/razorpay_service.dart';
 import '../../../shared/widgets/star_field.dart';
@@ -155,7 +156,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         child: Text(
-                          'Skip',
+                          context.tr('skip'),
                           style: AppTypography.body.copyWith(
                             color: _isAnyLoading ? AppColors.textSecondary.withAlpha(100) : AppColors.textSecondary,
                           ),
@@ -165,13 +166,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Unlock Your Daily Bhagya',
+                    context.tr('unlockDailyBhagya'),
                     style: AppTypography.h2.copyWith(color: AppColors.accent),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Get personalized cosmic guidance every day',
+                    context.tr('personalizedGuidance'),
                     style: AppTypography.body.copyWith(color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
@@ -185,7 +186,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   _buildFreeTrialButton(),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'Secured by Razorpay • Cancel anytime',
+                    context.tr('securedByRazorpay'),
                     style: AppTypography.small.copyWith(color: AppColors.textSecondary),
                     textAlign: TextAlign.center,
                   ),
