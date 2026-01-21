@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../../core/providers/localization_provider.dart';
 
 class Language {
   final String code;
@@ -29,17 +31,30 @@ const List<Language> _languages = [
   Language(code: 'as', name: 'Assamese', nativeName: 'অসমীয়া'),
 ];
 
-class LanguageSelectionScreen extends StatefulWidget {
+class LanguageSelectionScreen extends ConsumerStatefulWidget {
   const LanguageSelectionScreen({super.key});
 
   @override
-  State<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
+  ConsumerState<LanguageSelectionScreen> createState() => _LanguageSelectionScreenState();
 }
 
-class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
+class _LanguageSelectionScreenState extends ConsumerState<LanguageSelectionScreen> {
+  // Initialize with 'en' but will update from provider in initState
   String _selectedLanguage = 'en';
 
+  @override
+  void initState() {
+    super.initState();
+    // Defer state update to next frame to avoid build state issues
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _selectedLanguage = ref.read(localizationProvider).languageCode;
+      });
+    });
+  }
+
   void _handleContinue() {
+    ref.read(localizationProvider.notifier).setLocale(Locale(_selectedLanguage));
     context.push('/birth-details', extra: _selectedLanguage);
   }
 
@@ -106,7 +121,11 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
         final isSelected = _selectedLanguage == lang.code;
 
         return GestureDetector(
-          onTap: () => setState(() => _selectedLanguage = lang.code),
+          onTap: () {
+            setState(() => _selectedLanguage = lang.code);
+            // Updating provider immediately for better UX if needed, or keep local state until continue
+            ref.read(localizationProvider.notifier).setLocale(Locale(lang.code));
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(

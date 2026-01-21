@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../../../shared/widgets/app_button.dart';
 
@@ -45,7 +46,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
         ),
         child: Column(
           children: [
-            Text('Select Date of Birth', style: AppTypography.h4),
+            Text(context.tr('selectDateOfBirth'), style: AppTypography.h4),
             Expanded(
               child: CupertinoDatePicker(
                 mode: CupertinoDatePickerMode.date,
@@ -56,7 +57,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
               ),
             ),
             AppButton(
-              text: 'Done',
+              text: context.tr('done'),
               onPressed: () => Navigator.pop(ctx),
             ),
           ],
@@ -77,7 +78,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
         ),
         child: Column(
           children: [
-            Text('Select Time of Birth', style: AppTypography.h4),
+            Text(context.tr('selectTimeOfBirth'), style: AppTypography.h4),
             Expanded(
               child: CupertinoDatePicker(
                 mode: CupertinoDatePickerMode.time,
@@ -86,7 +87,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
               ),
             ),
             AppButton(
-              text: 'Done',
+              text: context.tr('done'),
               onPressed: () => Navigator.pop(ctx),
             ),
           ],
@@ -111,6 +112,7 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundRoot,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           const StarField(count: 40),
@@ -127,45 +129,45 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
                     constraints: const BoxConstraints(),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  Text('Your Birth Details', style: AppTypography.h2),
+                  Text(context.tr('birthDetails'), style: AppTypography.h2),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'We use this to calculate your personalized daily predictions',
+                    context.tr('birthDetailsSubtitle'),
                     style: AppTypography.body.copyWith(color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: AppSpacing.xl3),
-                  _buildInputLabel('Your Name'),
+                  _buildInputLabel(context.tr('yourName')),
                   TextField(
                     controller: _nameController,
                     style: AppTypography.body,
-                    decoration: const InputDecoration(hintText: 'Enter your name'),
+                    decoration: InputDecoration(hintText: context.tr('enterName')),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.xl2),
-                  _buildInputLabel('Date of Birth'),
+                  _buildInputLabel(context.tr('dateOfBirth')),
                   _buildPickerButton(
                     icon: Icons.calendar_today,
                     text: DateFormat('d MMMM yyyy').format(_birthDate),
                     onTap: _showDatePicker,
                   ),
                   const SizedBox(height: AppSpacing.xl2),
-                  _buildInputLabel('Time of Birth'),
+                  _buildInputLabel(context.tr('timeOfBirth')),
                   _buildPickerButton(
                     icon: Icons.access_time,
                     text: DateFormat('hh:mm a').format(_birthTime),
                     onTap: _showTimePicker,
                   ),
                   const SizedBox(height: AppSpacing.xl2),
-                  _buildInputLabel('Place of Birth'),
+                  _buildInputLabel(context.tr('placeOfBirth')),
                   TextField(
                     controller: _placeController,
                     style: AppTypography.body,
-                    decoration: const InputDecoration(hintText: 'e.g., Lucknow, Uttar Pradesh'),
+                    decoration: InputDecoration(hintText: context.tr('placeholderPlace')),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.xl3),
                   AppButton(
-                    text: 'Continue',
+                    text: context.tr('continue'),
                     onPressed: _isFormValid ? _handleContinue : null,
                     backgroundColor: _isFormValid ? AppColors.secondary : AppColors.backgroundSecondary,
                   ),
