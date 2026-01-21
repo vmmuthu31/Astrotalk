@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../../../shared/widgets/app_button.dart';
 
@@ -27,12 +28,12 @@ class WelcomeScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const SizedBox(height: AppSpacing.xl2),
-                        _buildLogoSection(),
+                        _buildLogoSection(context),
                         const SizedBox(height: AppSpacing.xl4),
-                        _buildFeatureSection(),
+                        _buildFeatureSection(context),
                         const SizedBox(height: AppSpacing.xl4),
                         AppButton(
-                          text: 'Get Started',
+                          text: context.tr('getStarted'),
                           onPressed: () => context.go('/language'),
                         ),
                         const SizedBox(height: AppSpacing.lg),
@@ -48,7 +49,7 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoSection() {
+  Widget _buildLogoSection(BuildContext context) {
     return Column(
       children: [
         Container(
@@ -100,7 +101,7 @@ class WelcomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Your Daily Cosmic Guide',
+          context.tr('tagline'),
           style: AppTypography.h4.copyWith(color: AppColors.text),
           textAlign: TextAlign.center,
         ),
@@ -113,22 +114,22 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureSection() {
+  Widget _buildFeatureSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(AppBorderRadius.lg),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          _FeatureItem(icon: Icons.wb_sunny, text: 'Daily Lucky Color & Number'),
-          SizedBox(height: AppSpacing.lg),
-          _FeatureItem(icon: Icons.explore, text: 'Auspicious Directions'),
-          SizedBox(height: AppSpacing.lg),
-          _FeatureItem(icon: Icons.access_time, text: 'Lucky Time Predictions'),
-          SizedBox(height: AppSpacing.lg),
-          _FeatureItem(icon: Icons.notifications, text: 'Daily Notifications'),
+          _FeatureItem(icon: Icons.wb_sunny, text: context.tr('featureLuckyColor')),
+          const SizedBox(height: AppSpacing.lg),
+          _FeatureItem(icon: Icons.explore, text: context.tr('featureAuspiciousDirection')),
+          const SizedBox(height: AppSpacing.lg),
+          _FeatureItem(icon: Icons.access_time, text: context.tr('featureLuckyTime')),
+          const SizedBox(height: AppSpacing.lg),
+          _FeatureItem(icon: Icons.notifications, text: context.tr('featureDailyNotifications')),
         ],
       ),
     );

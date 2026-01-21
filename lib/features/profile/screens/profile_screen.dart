@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -172,11 +173,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text(context.tr('helpSupport'), style: AppTypography.h4),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Email: support@bhagya.app', style: AppTypography.body),
+            const SizedBox(height: 8),
+            Text('WhatsApp: +91 9876543210', style: AppTypography.body),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('done'), style: TextStyle(color: AppColors.accent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 20;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -218,9 +251,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Text(context.tr('account'), style: AppTypography.cardTitle),
             const SizedBox(height: AppSpacing.md),
             _buildSettingsCard([
-              _SettingsRow(icon: Icons.help_outline, label: context.tr('helpSupport')),
-              _SettingsRow(icon: Icons.description, label: context.tr('termsOfService')),
-              _SettingsRow(icon: Icons.shield, label: context.tr('privacyPolicy')),
+              _SettingsRow(
+                icon: Icons.help_outline,
+                label: context.tr('helpSupport'),
+                onTap: () => _showHelpDialog(context),
+              ),
+              _SettingsRow(
+                icon: Icons.description,
+                label: context.tr('termsOfService'),
+                onTap: () => _launchUrl('https://bhagya.app/terms'),
+              ),
+              _SettingsRow(
+                icon: Icons.shield,
+                label: context.tr('privacyPolicy'),
+                onTap: () => _launchUrl('https://bhagya.app/privacy'),
+              ),
             ]),
             const SizedBox(height: AppSpacing.xl2),
             _buildLogoutButton(context, ref),
