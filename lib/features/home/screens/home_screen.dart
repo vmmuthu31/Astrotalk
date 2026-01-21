@@ -7,10 +7,13 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/localization_provider.dart';
 import '../../../core/services/astrology_service.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../widgets/lucky_card.dart';
+import '../../../core/providers/theme_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -55,9 +58,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   }
 
   void _initTts() async {
-    await _tts.setLanguage('hi-IN');
-    await _tts.setSpeechRate(0.85);
+    await _tts.setSpeechRate(0.4);
     _tts.setCompletionHandler(() => setState(() => _isSpeaking = false));
+  }
+
+  String _getTtsLanguage(String localeCode) {
+    const langMap = {
+      'en': 'en-IN', 'hi': 'hi-IN', 'bn': 'bn-IN', 'te': 'te-IN',
+      'mr': 'mr-IN', 'ta': 'ta-IN', 'gu': 'gu-IN', 'kn': 'kn-IN',
+      'ml': 'ml-IN', 'pa': 'pa-IN', 'or': 'or-IN', 'as': 'as-IN',
+    };
+    return langMap[localeCode] ?? 'hi-IN';
   }
 
   @override
@@ -67,21 +78,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
     super.dispose();
   }
 
-  String _getGreeting() {
+  String _getGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Shubh Prabhat';
-    if (hour < 17) return 'Shubh Dopahar';
-    return 'Shubh Sandhya';
+    if (hour < 12) return context.tr('greetingMorning');
+    if (hour < 17) return context.tr('greetingAfternoon');
+    return context.tr('greetingEvening');
   }
 
   String _currentMantra = '';
 
-  void _playMantra(String mantra) async {
+  void _playMantra(String mantra, String localeCode) async {
     _currentMantra = mantra;
     if (_isSpeaking) {
       await _tts.stop();
       setState(() => _isSpeaking = false);
     } else {
+      await _tts.setLanguage(_getTtsLanguage(localeCode));
       setState(() => _isSpeaking = true);
       await _tts.speak(mantra);
     }
@@ -90,7 +102,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   void _shareToWhatsApp(Map<String, dynamic> prediction) async {
     final message = '''${prediction['luckyColor']} is my lucky color today!
 
-My Daily Bhagya:
+My Today's Bhagya:
 Lucky Number: ${prediction['luckyNumber']}
 Lucky Direction: ${prediction['luckyDirection']}
 Lucky Time: ${prediction['luckyTime']}
@@ -110,7 +122,7 @@ Discover your daily luck with Bhagya app!''';
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 20;
 
     final prediction = AstrologyService.generateDailyPrediction(
       rashi: user?.rashi ?? 'Mesha',
@@ -118,7 +130,7 @@ Discover your daily luck with Bhagya app!''';
     );
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundRoot,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           const StarField(count: 30),
@@ -134,39 +146,39 @@ Discover your daily luck with Bhagya app!''';
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(user?.name ?? 'User'),
+                    _buildHeader(context, user?.name ?? 'User'),
                     const SizedBox(height: AppSpacing.xl2),
                     _buildRashiCard(user?.rashi, user?.nakshatra),
                     const SizedBox(height: AppSpacing.lg),
                     _buildDateCard(),
                     const SizedBox(height: AppSpacing.xl2),
                     Text(
-                      "Today's Lucky Guide",
+                      context.tr('todaysLuckyGuide'),
                       style: AppTypography.h4.copyWith(color: AppColors.accent),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     LuckyCard(
-                      title: 'Lucky Color',
+                      title: context.tr('luckyColor'),
                       value: prediction['luckyColor'] as String,
                       icon: Icons.water_drop,
                       colorHex: prediction['luckyColorHex'] as String,
                       index: 0,
                     ),
                     LuckyCard(
-                      title: 'Lucky Number',
+                      title: context.tr('luckyNumber'),
                       value: prediction['luckyNumber'].toString(),
                       icon: Icons.tag,
                       color: AppColors.accent,
                       index: 1,
                     ),
                     LuckyCard(
-                      title: 'Lucky Direction',
+                      title: context.tr('luckyDirection'),
                       value: prediction['luckyDirection'] as String,
                       icon: _directionIcons[prediction['luckyDirection']] ?? Icons.explore,
                       index: 2,
                     ),
                     LuckyCard(
-                      title: 'Lucky Time',
+                      title: context.tr('luckyTime'),
                       value: prediction['luckyTime'] as String,
                       icon: Icons.access_time,
                       index: 3,
@@ -189,7 +201,7 @@ Discover your daily luck with Bhagya app!''';
     );
   }
 
-  Widget _buildHeader(String userName) {
+  Widget _buildHeader(BuildContext context, String userName) {
     return AnimatedBuilder(
       animation: _headerController,
       builder: (context, child) {
@@ -204,7 +216,24 @@ Discover your daily luck with Bhagya app!''';
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(_getGreeting(), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(_getGreeting(context), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+              IconButton(
+                onPressed: () {
+                  final themeMode = ref.read(themeProvider);
+                  ref.read(themeProvider.notifier).setTheme(
+                    themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light,
+                  );
+                },
+                icon: Icon(
+                  ref.watch(themeProvider) == ThemeMode.light ? Icons.dark_mode : Icons.light_mode,
+                  color: AppColors.accent,
+                ),
+              ),
+            ],
+          ),
           Text(userName, style: AppTypography.h3),
         ],
       ),
@@ -287,9 +316,9 @@ Discover your daily luck with Bhagya app!''';
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Today's Mantra", style: AppTypography.small.copyWith(color: AppColors.textSecondary)),
+              Text(context.tr('todaysMantra'), style: AppTypography.small.copyWith(color: AppColors.textSecondary)),
               GestureDetector(
-                onTap: () => _playMantra(mantra),
+                onTap: () => _playMantra(mantra, ref.read(localizationProvider).languageCode),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                   decoration: BoxDecoration(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
 
 class NakshatraScreen extends ConsumerWidget {
@@ -26,17 +27,17 @@ class NakshatraScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final user = authState.user;
-    final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 20;
 
     final nakshatra = user?.nakshatra ?? 'Ashwini';
     final rashi = user?.rashi ?? 'Aries';
     final info = _nakshatraInfo[nakshatra] ?? _nakshatraInfo['Ashwini']!;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundRoot,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Your Nakshatra'),
+        title: Text(context.tr('yourNakshatra')),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, bottomPadding),
@@ -45,22 +46,22 @@ class NakshatraScreen extends ConsumerWidget {
           children: [
             _buildChartCard(nakshatra, rashi),
             const SizedBox(height: AppSpacing.xl2),
-            Text('Nakshatra Details', style: AppTypography.h4.copyWith(color: AppColors.accent)),
+            Text(context.tr('nakshatraDetails'), style: AppTypography.h4.copyWith(color: AppColors.accent)),
             const SizedBox(height: AppSpacing.lg),
-            _buildDetailsCard([
-              _DetailRow(icon: Icons.star, label: 'Ruling Planet', value: info['ruler']!),
-              _DetailRow(icon: Icons.wb_sunny, label: 'Deity', value: info['deity']!),
-              _DetailRow(icon: Icons.air, label: 'Element', value: info['element']!),
-              _DetailRow(icon: Icons.adjust, label: 'Symbol', value: info['symbol']!),
+            _buildDetailsCard(context, [
+              _DetailRow(icon: Icons.star, label: context.tr('rulingPlanet'), value: info['ruler']!),
+              _DetailRow(icon: Icons.wb_sunny, label: context.tr('deity'), value: info['deity']!),
+              _DetailRow(icon: Icons.air, label: context.tr('element'), value: info['element']!),
+              _DetailRow(icon: Icons.adjust, label: context.tr('symbol'), value: info['symbol']!),
             ]),
             const SizedBox(height: AppSpacing.xl2),
-            Text('Birth Details', style: AppTypography.h4.copyWith(color: AppColors.accent)),
+            Text(context.tr('birthDetailsTitle'), style: AppTypography.h4.copyWith(color: AppColors.accent)),
             const SizedBox(height: AppSpacing.lg),
-            _buildDetailsCard([
-              _DetailRow(icon: Icons.person, label: 'Name', value: user?.name ?? '-'),
-              _DetailRow(icon: Icons.calendar_today, label: 'Birth Date', value: user?.birthDate ?? '-'),
-              _DetailRow(icon: Icons.access_time, label: 'Birth Time', value: user?.birthTime ?? '-'),
-              _DetailRow(icon: Icons.location_on, label: 'Birth Place', value: user?.birthPlace ?? '-'),
+            _buildDetailsCard(context, [
+              _DetailRow(icon: Icons.person, label: context.tr('name'), value: user?.name ?? '-'),
+              _DetailRow(icon: Icons.calendar_today, label: context.tr('birthDate'), value: user?.birthDate ?? '-'),
+              _DetailRow(icon: Icons.access_time, label: context.tr('birthTime'), value: user?.birthTime ?? '-'),
+              _DetailRow(icon: Icons.location_on, label: context.tr('birthPlace'), value: user?.birthPlace ?? '-'),
             ]),
           ],
         ),
@@ -110,7 +111,7 @@ class NakshatraScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailsCard(List<_DetailRow> rows) {
+  Widget _buildDetailsCard(BuildContext context, List<_DetailRow> rows) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
