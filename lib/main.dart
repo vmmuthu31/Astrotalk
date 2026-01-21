@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'core/providers/auth_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/providers/localization_provider.dart';
+import 'core/providers/theme_provider.dart';
+import 'core/localization/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,21 +19,38 @@ class BhagyaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final locale = ref.watch(localizationProvider);
+    final themeMode = ref.watch(themeProvider);
     
-    if (authState.isLoading) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        home: const _SplashScreen(),
-      );
-    }
-
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Bhagya',
+      title: 'Bhagya - Your Daily Cosmic Guide',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
+      locale: locale,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('hi'),
+        Locale('bn'),
+        Locale('te'),
+        Locale('mr'),
+        Locale('ta'),
+        Locale('gu'),
+        Locale('kn'),
+        Locale('ml'),
+        Locale('pa'),
+        Locale('or'),
+        Locale('as'),
+      ],
       routerConfig: router,
     );
   }
