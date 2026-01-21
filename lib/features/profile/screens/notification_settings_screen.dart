@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -38,12 +39,12 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text('Cancel', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                  child: Text(context.tr('cancel'), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
                 ),
-                Text('Notification Time', style: AppTypography.h4),
+                Text(context.tr('notificationTime'), style: AppTypography.h4),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text('Done', style: AppTypography.body.copyWith(color: AppColors.accent)),
+                  child: Text(context.tr('done'), style: AppTypography.body.copyWith(color: AppColors.accent)),
                 ),
               ],
             ),
@@ -63,9 +64,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundRoot,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Notification Settings'),
+        title: Text(context.tr('notificationSettings')),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -76,7 +77,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
           children: [
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Daily Notifications',
+              context.tr('dailyNotifications'),
               style: AppTypography.cardTitle,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -84,8 +85,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               children: [
                 _buildSettingsRow(
                   icon: Icons.wb_sunny,
-                  title: 'Daily Lucky Predictions',
-                  description: 'Receive your daily color, number & direction',
+                  title: context.tr('dailyLuckyPredictions'),
+                  description: context.tr('dailyPredictionsDesc'),
                   trailing: Switch.adaptive(
                     value: _dailyEnabled,
                     onChanged: (v) => setState(() => _dailyEnabled = v),
@@ -105,7 +106,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             ),
             const SizedBox(height: AppSpacing.xl2),
             Text(
-              'Other Notifications',
+              context.tr('otherNotifications'),
               style: AppTypography.cardTitle,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -113,8 +114,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               children: [
                 _buildSettingsRow(
                   icon: Icons.calendar_today,
-                  title: 'Weekly Summary',
-                  description: 'Get weekly overview every Sunday',
+                  title: context.tr('weeklySummary'),
+                  description: context.tr('weeklySummaryDesc'),
                   trailing: Switch.adaptive(
                     value: _weeklyEnabled,
                     onChanged: (v) => setState(() => _weeklyEnabled = v),
@@ -139,7 +140,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Text(
-                      'Push notifications help you start your day with cosmic guidance. You can change these settings anytime.',
+                      context.tr('notificationInfoText'),
                       style: AppTypography.small.copyWith(color: AppColors.textSecondary),
                     ),
                   ),

@@ -5,7 +5,10 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/localization_provider.dart';
 import '../../../core/services/razorpay_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -112,6 +115,63 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  String _getLanguageName(String code) {
+    const names = {
+      'en': 'English', 'hi': 'हिन्दी', 'bn': 'বাংলা', 'te': 'తెలుగు',
+      'mr': 'मराठी', 'ta': 'தமிழ்', 'gu': 'ગુજરાતી', 'kn': 'ಕನ್ನಡ',
+      'ml': 'മലയാളം', 'pa': 'ਪੰਜਾਬੀ', 'or': 'ଓଡ଼ିଆ', 'as': 'অসমীয়া',
+    };
+    return names[code] ?? 'English';
+  }
+
+  void _toggleTheme(WidgetRef ref) {
+    final current = ref.read(themeProvider);
+    ref.read(themeProvider.notifier).setTheme(
+      current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
+    );
+  }
+
+  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
+    final languages = [
+      {'code': 'en', 'name': 'English'},
+      {'code': 'hi', 'name': 'हिन्दी (Hindi)'},
+      {'code': 'bn', 'name': 'বাংলা (Bengali)'},
+      {'code': 'te', 'name': 'తెలుగు (Telugu)'},
+      {'code': 'mr', 'name': 'मराठी (Marathi)'},
+      {'code': 'ta', 'name': 'தமிழ் (Tamil)'},
+      {'code': 'gu', 'name': 'ગુજરાતી (Gujarati)'},
+      {'code': 'kn', 'name': 'ಕನ್ನಡ (Kannada)'},
+      {'code': 'ml', 'name': 'മലയാളം (Malayalam)'},
+      {'code': 'pa', 'name': 'ਪੰਜਾਬੀ (Punjabi)'},
+      {'code': 'or', 'name': 'ଓଡ଼ିଆ (Odia)'},
+      {'code': 'as', 'name': 'অসমীয়া (Assamese)'},
+    ];
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      builder: (ctx) => ListView.builder(
+        shrinkWrap: true,
+        itemCount: languages.length,
+        itemBuilder: (ctx, i) {
+          final lang = languages[i];
+          final isSelected = ref.read(localizationProvider).languageCode == lang['code'];
+          return ListTile(
+            title: Text(lang['name']!, style: TextStyle(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isSelected ? AppColors.accent : null,
+            )),
+            trailing: isSelected ? const Icon(Icons.check, color: AppColors.accent) : null,
+            onTap: () {
+              ref.read(localizationProvider.notifier).setLocale(Locale(lang['code']!));
+              Navigator.pop(ctx);
+            },
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -119,10 +179,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final bottomPadding = MediaQuery.of(context).padding.bottom + 80;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundRoot,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('Profile'),
+        title: Text(context.tr('profile')),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.xl, AppSpacing.lg, bottomPadding),
@@ -133,24 +193,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(height: AppSpacing.xl2),
             _buildSubscriptionCard(user?.isSubscribed ?? false),
             const SizedBox(height: AppSpacing.xl2),
-            Text('Settings', style: AppTypography.cardTitle),
+            Text(context.tr('settings'), style: AppTypography.cardTitle),
             const SizedBox(height: AppSpacing.md),
             _buildSettingsCard([
               _SettingsRow(
                 icon: Icons.notifications,
-                label: 'Notifications',
+                label: context.tr('notifications'),
                 onTap: () => context.push('/notification-settings'),
               ),
-              _SettingsRow(icon: Icons.language, label: 'Language', value: 'English'),
-              _SettingsRow(icon: Icons.dark_mode, label: 'Theme', value: 'Dark'),
+              _SettingsRow(
+                icon: Icons.language,
+                label: context.tr('language'),
+                value: _getLanguageName(ref.watch(localizationProvider).languageCode),
+                onTap: () => _showLanguagePicker(context, ref),
+              ),
+              _SettingsRow(
+                icon: ref.watch(themeProvider) == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode,
+                label: context.tr('theme'),
+                value: ref.watch(themeProvider) == ThemeMode.dark ? context.tr('dark') : context.tr('light'),
+                onTap: () => _toggleTheme(ref),
+              ),
             ]),
             const SizedBox(height: AppSpacing.xl2),
-            Text('Account', style: AppTypography.cardTitle),
+            Text(context.tr('account'), style: AppTypography.cardTitle),
             const SizedBox(height: AppSpacing.md),
             _buildSettingsCard([
-              _SettingsRow(icon: Icons.help_outline, label: 'Help & Support'),
-              _SettingsRow(icon: Icons.description, label: 'Terms of Service'),
-              _SettingsRow(icon: Icons.shield, label: 'Privacy Policy'),
+              _SettingsRow(icon: Icons.help_outline, label: context.tr('helpSupport')),
+              _SettingsRow(icon: Icons.description, label: context.tr('termsOfService')),
+              _SettingsRow(icon: Icons.shield, label: context.tr('privacyPolicy')),
             ]),
             const SizedBox(height: AppSpacing.xl2),
             _buildLogoutButton(context, ref),
