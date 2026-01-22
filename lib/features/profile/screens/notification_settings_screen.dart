@@ -41,7 +41,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(context.tr('cancel'), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
                 ),
-                Text(context.tr('notificationTime'), style: AppTypography.h4),
+                Flexible(
+                  child: Text(context.tr('notificationTime'), style: AppTypography.h4, overflow: TextOverflow.ellipsis),
+                ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
                   child: Text(context.tr('done'), style: AppTypography.body.copyWith(color: AppColors.accent)),

@@ -419,24 +419,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   backgroundColor: AppColors.secondary,
                   disabledBackgroundColor: AppColors.secondary.withAlpha(128),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_isUpgradeLoading) ...[
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      const Text('Processing...'),
-                    ] else
-                      const Text('Upgrade Now - ₹99/month'),
-                  ],
-                ),
+                child: _isUpgradeLoading
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: AppSpacing.md),
+                          Text('Processing...'),
+                        ],
+                      )
+                    : const Text('Upgrade - ₹99/mo'),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -450,27 +449,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: _isAnyLoading ? AppColors.textSecondary : AppColors.accent,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_isTrialLoading) ...[
-                      SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(AppColors.accent),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Text('Processing...', style: TextStyle(color: AppColors.accent)),
-                    ] else
-                      Text(
-                        'Start 7-Day Free Trial',
+                child: _isTrialLoading
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Text('Processing...', style: TextStyle(color: AppColors.accent)),
+                        ],
+                      )
+                    : Text(
+                        '7-Day Free Trial',
                         style: TextStyle(color: _isAnyLoading ? AppColors.textSecondary : AppColors.accent),
                       ),
-                  ],
-                ),
               ),
             ),
           ],

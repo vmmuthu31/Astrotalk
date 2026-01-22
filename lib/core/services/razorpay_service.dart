@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../config/app_config.dart';
+import 'api_service.dart';
 
-// Conditional import for web
 import 'razorpay_web_stub.dart'
     if (dart.library.html) 'razorpay_web_impl.dart' as razorpay_web;
 
@@ -20,6 +20,8 @@ class RazorpayService {
   String? _planId;
   String? _currentSubscriptionId;
   bool get _isWebPlatform => kIsWeb;
+  
+  static const String _backendUrl = 'http://localhost:3000/api/payment';
   
   PaymentSuccessCallback? onPaymentSuccess;
   PaymentFailureCallback? onPaymentFailure;
@@ -52,35 +54,12 @@ class RazorpayService {
     onExternalWallet?.call(response);
   }
 
-  String get _authHeader {
-    final authString = base64Encode(
-      utf8.encode('${AppConfig.razorpayKeyId}:${AppConfig.razorpayKeySecret}'),
-    );
-    return 'Basic $authString';
-  }
-
   Future<String?> createPlan() async {
     try {
       final response = await http.post(
-        Uri.parse('https://api.razorpay.com/v1/plans'),
-        headers: {
-          'Authorization': _authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'period': 'monthly',
-          'interval': 1,
-          'item': {
-            'name': 'Bhagya Premium Monthly',
-            'amount': 9900,
-            'currency': 'INR',
-            'description': 'Monthly subscription for Bhagya Premium features',
-          },
-          'notes': {
-            'app': 'bhagya',
-            'type': 'monthly_subscription',
-          },
-        }),
+        Uri.parse('$_backendUrl/create-plan'),
+        headers: {'Content-Type': 'application/json'},
+        body: '{}',
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -112,31 +91,14 @@ class RazorpayService {
         }
       }
 
-      final now = DateTime.now();
-      final expireBy = now.add(const Duration(hours: 24)).millisecondsSinceEpoch ~/ 1000;
-      
-      final Map<String, dynamic> requestBody = {
-        'plan_id': planId,
-        'total_count': 12,
-        'quantity': 1,
-        'customer_notify': 1,
-        'expire_by': expireBy,
-        'notify_info': {
-          'notify_phone': customerPhone,
-        },
-      };
-
-      if (startAtUnix != null) {
-        requestBody['start_at'] = startAtUnix;
-      }
-
       final response = await http.post(
-        Uri.parse('https://api.razorpay.com/v1/subscriptions'),
-        headers: {
-          'Authorization': _authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(requestBody),
+        Uri.parse('$_backendUrl/create-subscription'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'planId': planId,
+          'customerPhone': customerPhone,
+          'startAt': startAtUnix,
+        }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -151,6 +113,37 @@ class RazorpayService {
     } catch (e) {
       debugPrint('Error creating subscription: $e');
       return null;
+    }
+  }
+
+  Future<bool> verifyPayment({
+    required String paymentId,
+    required String subscriptionId, 
+    required String signature,
+    required String userId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_backendUrl/verify'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'razorpay_payment_id': paymentId,
+          'razorpay_subscription_id': subscriptionId,
+          'razorpay_signature': signature,
+          'userId': userId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Payment verified successfully');
+        return true;
+      } else {
+        debugPrint('Payment verification failed: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Error verifying payment: $e');
+      return false;
     }
   }
 

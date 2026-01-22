@@ -28,24 +28,60 @@ class ApiService {
     };
   }
 
+  static Future<Map<String, dynamic>> sendOTP(String email) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/send-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['error'] ?? 'Failed to send OTP');
+    }
+  }
+
+  static Future<Map<String, dynamic>> verifyOTP(String email, String otp) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'otp': otp}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      await setToken(data['token']);
+      return data;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['error'] ?? 'OTP verification failed');
+    }
+  }
+
   static Future<Map<String, dynamic>> register({
-    required String phone,
-    required String password,
+    String? email,
+    String? phone,
     required String name,
     required String birthDate,
     required String birthTime,
     required String birthPlace,
+    String? rashi,
+    String? nakshatra,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/register'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'email': email,
         'phone': phone,
-        'password': password,
         'name': name,
         'birthDate': birthDate,
         'birthTime': birthTime,
         'birthPlace': birthPlace,
+        'rashi': rashi,
+        'nakshatra': nakshatra,
       }),
     );
 
@@ -58,13 +94,15 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> login({
-    required String phone,
-    required String password,
+    String? email,
+    String? phone,
+    String? password,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
+        'email': email,
         'phone': phone,
         'password': password,
       }),
@@ -77,6 +115,22 @@ class ApiService {
     } else {
       final error = jsonDecode(response.body);
       throw Exception(error['error'] ?? 'Login failed');
+    }
+  }
+
+  static Future<Map<String, dynamic>> updateProfile(String userId, Map<String, dynamic> data) async {
+    final headers = await _headers();
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/profile/$userId'),
+      headers: headers,
+      body: jsonEncode(data),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['error'] ?? 'Profile update failed');
     }
   }
 

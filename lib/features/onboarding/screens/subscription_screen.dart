@@ -8,6 +8,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/services/razorpay_service.dart';
+import '../../../core/services/api_service.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../../../shared/models/user.dart';
 
@@ -120,20 +121,47 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _completeOnboarding({bool isSubscribed = false}) async {
-    final user = User(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: _params['name'] ?? 'User',
-      birthDate: _params['birthDate'],
-      birthTime: _params['birthTime'],
-      birthPlace: _params['birthPlace'],
-      nakshatra: _params['nakshatra'],
-      rashi: _params['rashi'],
-      isSubscribed: isSubscribed,
-    );
+    try {
+      final name = _params['name'] ?? 'User';
+      final birthDate = _params['birthDate'] ?? '';
+      final birthTime = _params['birthTime'] ?? '';
+      final birthPlace = _params['birthPlace'] ?? '';
+      final nakshatra = _params['nakshatra'] ?? '';
+      final rashi = _params['rashi'] ?? '';
 
-    await ref.read(authProvider.notifier).setUser(user);
-    await ref.read(authProvider.notifier).setOnboarded(true);
-    if (mounted) context.go('/home');
+      try {
+        await ApiService.register(
+          phone: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: name,
+          birthDate: birthDate,
+          birthTime: birthTime,
+          birthPlace: birthPlace,
+          rashi: rashi,
+          nakshatra: nakshatra,
+        );
+        debugPrint('User registered in backend successfully');
+      } catch (e) {
+        debugPrint('Backend registration skipped or failed: $e');
+      }
+
+      final user = User(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: name,
+        birthDate: birthDate,
+        birthTime: birthTime,
+        birthPlace: birthPlace,
+        nakshatra: nakshatra,
+        rashi: rashi,
+        isSubscribed: isSubscribed,
+      );
+
+      await ref.read(authProvider.notifier).setUser(user);
+      await ref.read(authProvider.notifier).setOnboarded(true);
+      if (mounted) context.go('/home');
+    } catch (e) {
+      debugPrint('Error completing onboarding: $e');
+      if (mounted) context.go('/home');
+    }
   }
 
   @override

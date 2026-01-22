@@ -34,7 +34,7 @@ class WelcomeScreen extends StatelessWidget {
                         const SizedBox(height: AppSpacing.xl4),
                         AppButton(
                           text: context.tr('getStarted'),
-                          onPressed: () => context.go('/language'),
+                          onPressed: () => context.go('/email-entry'),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                       ],

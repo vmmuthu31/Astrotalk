@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
+import '../../features/onboarding/screens/email_entry_screen.dart';
+import '../../features/onboarding/screens/onboarding_otp_screen.dart';
 import '../../features/onboarding/screens/language_selection_screen.dart';
 import '../../features/onboarding/screens/birth_details_screen.dart';
 import '../../features/onboarding/screens/nakshatra_mapping_screen.dart';
@@ -13,6 +15,7 @@ import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/notification_settings_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/auth/screens/otp_verification_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -28,6 +31,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (authState.isLoading) return null;
       
       final isOnboarding = state.matchedLocation.startsWith('/welcome') ||
+          state.matchedLocation.startsWith('/email-entry') ||
+          state.matchedLocation.startsWith('/onboarding-otp') ||
           state.matchedLocation.startsWith('/language') ||
           state.matchedLocation.startsWith('/birth-details') ||
           state.matchedLocation.startsWith('/nakshatra-mapping') ||
@@ -47,6 +52,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: '/email-entry',
+        builder: (context, state) => const EmailEntryScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding-otp',
+        builder: (context, state) {
+          final params = state.extra as Map<String, dynamic>? ?? {};
+          return OnboardingOtpScreen(email: params['email'] ?? '');
+        },
       ),
       GoRoute(
         path: '/language',
@@ -111,6 +127,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/otp-verification',
+        builder: (context, state) {
+          final params = state.extra as Map<String, dynamic>? ?? {};
+          return OtpVerificationScreen(
+            email: params['email'] ?? '',
+            isLogin: params['isLogin'] ?? false,
+          );
+        },
       ),
     ],
   );
