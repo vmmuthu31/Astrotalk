@@ -39,5 +39,14 @@
   "dark": "ଗାଢ଼",
   "light": "ହାଲୁକା",
   "logout": "ଲଗ୍ଆଉଟ୍",
-  "deleteAccount": "ଖାତା ବିଲୋପ କରନ୍ତୁ"
+  "deleteAccount": "ଖାତା ବିଲୋପ କରନ୍ତୁ",
+
+  "loginTitle": "ଫେରି ସ୍ବାଗତ",
+  "login": "ଲଗଇନ୍",
+  "register": "ପଞ୍ଜୀକରଣ",
+  "phone": "ଫୋନ୍ ନମ୍ବର",
+  "password": "ପାସୱାର୍ଡ୍",
+  "createAccount": "ଖାତା ସୃଷ୍ଟି କରନ୍ତୁ",
+  "dontHaveAccount": "ଖାତା ନାହିଁ? ପଞ୍ଜୀକରଣ କରନ୍ତୁ",
+  "alreadyHaveAccount": "ପୂର୍ବରୁ ଖାତା ଅଛି? ଲଗଇନ୍ କରନ୍ତୁ"
 }

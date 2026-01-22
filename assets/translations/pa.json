@@ -39,5 +39,14 @@
   "dark": "ਹਨੇਰਾ",
   "light": "ਚਾਨਣ",
   "logout": "ਲੌਗਆਊਟ",
-  "deleteAccount": "ਖਾਤਾ ਮਿਟਾਓ"
+  "deleteAccount": "ਖਾਤਾ ਮਿਟਾਓ",
+
+  "loginTitle": "ਵਾਪਸ ਸਵਾਗਤ ਹੈ",
+  "login": "ਲੌਗਇਨ",
+  "register": "ਰਜਿਸਟਰ",
+  "phone": "ਫ਼ੋਨ ਨੰਬਰ",
+  "password": "ਪਾਸਵਰਡ",
+  "createAccount": "ਖਾਤਾ ਬਣਾਓ",
+  "dontHaveAccount": "ਖਾਤਾ ਨਹੀਂ ਹੈ? ਰਜਿਸਟਰ ਕਰੋ",
+  "alreadyHaveAccount": "ਪਹਿਲਾਂ ਤੋਂ ਖਾਤਾ ਹੈ? ਲੌਗਇਨ ਕਰੋ"
 }

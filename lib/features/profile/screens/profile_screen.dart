@@ -11,6 +11,7 @@ import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/theme_provider.dart';
 import '../../../core/providers/localization_provider.dart';
 import '../../../core/services/razorpay_service.dart';
+import '../../../core/services/api_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -567,8 +568,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
+              await ApiService.logout();
               await ref.read(authProvider.notifier).logout();
-              if (context.mounted) context.go('/welcome');
+              if (context.mounted) context.go('/login');
             },
             child: Text('Logout', style: AppTypography.body.copyWith(color: AppColors.warning)),
           ),

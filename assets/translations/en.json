@@ -121,5 +121,14 @@
   "weeklySummaryDesc": "Get weekly overview every Sunday",
   "notificationTime": "Notification Time",
   "notificationTimeDesc": "When to send daily predictions",
-  "notificationInfoText": "Push notifications help you start your day with cosmic guidance. You can change these settings anytime."
+  "notificationInfoText": "Push notifications help you start your day with cosmic guidance. You can change these settings anytime.",
+
+  "loginTitle": "Welcome Back",
+  "login": "Login",
+  "register": "Register",
+  "phone": "Phone Number",
+  "password": "Password",
+  "createAccount": "Create Account",
+  "dontHaveAccount": "Don't have an account? Register",
+  "alreadyHaveAccount": "Already have an account? Login"
 }

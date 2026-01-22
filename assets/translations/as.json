@@ -39,5 +39,14 @@
   "dark": "গাঢ়",
   "light": "পাতল",
   "logout": "লগআউট",
-  "deleteAccount": "একাউন্ট মচা"
+  "deleteAccount": "একাউন্ট মচা",
+
+  "loginTitle": "পুনৰ স্বাগতম",
+  "login": "লগইন",
+  "register": "পঞ্জীয়ন",
+  "phone": "ফোন নম্বৰ",
+  "password": "পাছৱৰ্ড",
+  "createAccount": "একাউন্ট সৃষ্টি কৰক",
+  "dontHaveAccount": "একাউন্ট নাই? পঞ্জীয়ন কৰক",
+  "alreadyHaveAccount": "ইতিমধ্যে একাউন্ট আছে? লগইন কৰক"
 }

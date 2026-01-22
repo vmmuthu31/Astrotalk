@@ -11,6 +11,8 @@ import '../../features/home/screens/home_screen.dart';
 import '../../features/nakshatra/screens/nakshatra_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/notification_settings_screen.dart';
+import '../../features/auth/screens/login_screen.dart';
+import '../../features/auth/screens/register_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -101,6 +103,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notification-settings',
         builder: (context, state) => const NotificationSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
       ),
     ],
   );
