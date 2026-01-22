@@ -10,6 +10,7 @@ const server: FastifyInstance = Fastify({
 });
 
 import { authRoutes } from "./routes/auth.routes";
+import { paymentRoutes } from "./routes/payment.routes";
 
 server.register(cors, {
   origin: true,
@@ -20,6 +21,7 @@ server.register(customJwt, {
 });
 
 server.register(authRoutes, { prefix: "/api/auth" });
+server.register(paymentRoutes, { prefix: "/api/payment" });
 
 server.get("/", async () => {
   return { message: "Welcome to the Astro Guide API 🚀" };

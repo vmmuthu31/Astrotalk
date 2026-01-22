@@ -24,4 +24,43 @@ export class AuthController {
       return reply.code(401).send({ error: err.message });
     }
   };
+
+  sendOTP = async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { email } = req.body as { email: string };
+      if (!email) {
+        return reply.code(400).send({ error: "Email is required" });
+      }
+      const result = await this.authService.sendOTP(email);
+      return reply.send(result);
+    } catch (err: any) {
+      return reply.code(500).send({ error: err.message });
+    }
+  };
+
+  verifyOTP = async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { email, otp } = req.body as { email: string; otp: string };
+      if (!email || !otp) {
+        return reply.code(400).send({ error: "Email and OTP are required" });
+      }
+      const result = await this.authService.verifyOTP(email, otp);
+      return reply.send(result);
+    } catch (err: any) {
+      if (err.message === "Invalid or expired OTP") {
+        return reply.code(401).send({ error: err.message });
+      }
+      return reply.code(500).send({ error: err.message });
+    }
+  };
+
+  updateProfile = async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { userId } = req.params as { userId: string };
+      const user = await this.authService.updateProfile(userId, req.body);
+      return reply.send(user);
+    } catch (err: any) {
+      return reply.code(500).send({ error: err.message });
+    }
+  };
 }

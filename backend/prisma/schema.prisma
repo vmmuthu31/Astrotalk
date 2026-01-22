@@ -39,3 +39,14 @@ model Payment {
   userId        String
   user          User      @relation(fields: [userId], references: [id])
 }
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
