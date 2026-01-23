@@ -129,8 +129,12 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       final nakshatra = _params['nakshatra'] ?? '';
       final rashi = _params['rashi'] ?? '';
 
+      final authState = ref.read(authProvider);
+      final email = authState.registrationData['email'] as String?;
+
       try {
         await ApiService.register(
+          email: email,
           phone: DateTime.now().millisecondsSinceEpoch.toString(),
           name: name,
           birthDate: birthDate,

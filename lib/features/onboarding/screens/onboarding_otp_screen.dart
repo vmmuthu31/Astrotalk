@@ -7,7 +7,9 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/star_field.dart';
+import '../../../shared/models/user.dart';
 
 class OnboardingOtpScreen extends ConsumerStatefulWidget {
   final String email;
@@ -51,11 +53,20 @@ class _OnboardingOtpScreenState extends ConsumerState<OnboardingOtpScreen> {
     try {
       final result = await ApiService.verifyOTP(widget.email, _otp);
       
-      if (result['token'] != null) {
-        await ApiService.setToken(result['token']);
-        if (mounted) {
-          context.go('/language');
+      if (result['isNewUser'] == false) {
+        if (result['user'] != null) {
+          try {
+            final user = User.fromJson(result['user']);
+            await ref.read(authProvider.notifier).setUser(user);
+            await ref.read(authProvider.notifier).setOnboarded(true);
+          } catch (e) {
+            debugPrint('Error parsing user: $e');
+          }
         }
+        if (mounted) context.go('/home');
+      } else {
+        ref.read(authProvider.notifier).updateRegistrationData({'email': widget.email});
+        if (mounted) context.go('/language');
       }
     } catch (e) {
       if (mounted) {
@@ -197,8 +208,8 @@ class _OnboardingOtpScreenState extends ConsumerState<OnboardingOtpScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading || _otp.length != 6 ? null : _verifyOTP,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        disabledBackgroundColor: AppColors.accent.withOpacity(0.5),
+                        backgroundColor: AppColors.secondary,
+                        disabledBackgroundColor: AppColors.secondary.withOpacity(0.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppBorderRadius.lg),
                         ),
@@ -237,13 +248,15 @@ class _OnboardingOtpScreenState extends ConsumerState<OnboardingOtpScreen> {
         controller: _controllers[index],
         focusNode: _focusNodes[index],
         textAlign: TextAlign.center,
+        textAlignVertical: TextAlignVertical.center,
         keyboardType: TextInputType.number,
         maxLength: 1,
-        style: AppTypography.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+        style: AppTypography.h4.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
         decoration: InputDecoration(
           counterText: '',
           filled: true,
           fillColor: AppColors.backgroundSecondary,
+          contentPadding: EdgeInsets.zero,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppBorderRadius.md),
             borderSide: BorderSide.none,
