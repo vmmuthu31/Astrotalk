@@ -6,7 +6,6 @@ class User {
   final String? birthPlace;
   final String? nakshatra;
   final String? rashi;
-  final String? rashi;
   final bool isSubscribed;
   final bool notificationsEnabled;
   final String notificationTime;
@@ -18,7 +17,6 @@ class User {
     this.birthTime,
     this.birthPlace,
     this.nakshatra,
-    this.rashi,
     this.rashi,
     this.isSubscribed = false,
     this.notificationsEnabled = true,

@@ -125,7 +125,8 @@ class NotificationService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
 
-      debugPrint('[Notification] Scheduled daily at ${scheduleTime.format(navigatorKey.currentContext!)}');
+      final formattedTime = '${scheduleTime.hour.toString().padLeft(2, '0')}:${scheduleTime.minute.toString().padLeft(2, '0')}';
+      debugPrint('[Notification] Scheduled daily at $formattedTime');
     } catch (e) {
       debugPrint('[Notification] Scheduling error: $e');
     }
