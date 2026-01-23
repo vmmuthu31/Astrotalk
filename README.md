@@ -1,6 +1,4 @@
-# astro
-
-A new Flutter project.
+# Bhagya A new Flutter project.
 
 ## Getting Started
 

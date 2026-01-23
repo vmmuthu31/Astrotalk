@@ -58,8 +58,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   }
 
   void _initTts() async {
-    await _tts.setSpeechRate(0.4);
-    _tts.setCompletionHandler(() => setState(() => _isSpeaking = false));
+    try {
+      await _tts.setSpeechRate(0.4);
+      await _tts.setVolume(1.0);
+      await _tts.setPitch(1.0);
+
+      _tts.setStartHandler(() {
+        debugPrint('TTS Started');
+        setState(() => _isSpeaking = true);
+      });
+
+      _tts.setCompletionHandler(() {
+        debugPrint('TTS Completed');
+        setState(() => _isSpeaking = false);
+      });
+
+      _tts.setErrorHandler((msg) {
+        debugPrint('TTS Error: $msg');
+        setState(() => _isSpeaking = false);
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('TTS Error: $msg'), backgroundColor: AppColors.warning),
+          );
+        }
+      });
+      
+      final languages = await _tts.getLanguages;
+      debugPrint('TTS Available Languages: $languages');
+
+    } catch (e) {
+      debugPrint('TTS Init Error: $e');
+    }
   }
 
   String _getTtsLanguage(String localeCode) {
@@ -90,12 +119,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
   void _playMantra(String mantra, String localeCode) async {
     _currentMantra = mantra;
     if (_isSpeaking) {
-      await _tts.stop();
+      final result = await _tts.stop();
+      debugPrint('TTS Stop Result: $result');
       setState(() => _isSpeaking = false);
     } else {
-      await _tts.setLanguage(_getTtsLanguage(localeCode));
-      setState(() => _isSpeaking = true);
-      await _tts.speak(mantra);
+      var lang = _getTtsLanguage(localeCode);
+      debugPrint('TTS Target Language: $lang');
+
+      // Check if language is available
+      final isAvailable = await _tts.isLanguageAvailable(lang);
+      debugPrint('TTS Language Available: $isAvailable');
+
+      if (!isAvailable) {
+         debugPrint('Target language $lang not available, falling back to English');
+         lang = 'en-US';
+      }
+
+      final langResult = await _tts.setLanguage(lang);
+      debugPrint('TTS Set Language Result: $langResult');
+      
+      if (langResult == 0 || langResult == 1) {
+         debugPrint('TTS Speaking: $mantra');
+         final result = await _tts.speak(mantra);
+         debugPrint('TTS Speak Result: $result');
+         if (result == 1) setState(() => _isSpeaking = true);
+      } else {
+        debugPrint('TTS Language not supported: $lang');
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Language $lang not supported for TTS'), backgroundColor: AppColors.warning),
+          );
+        }
+      }
     }
   }
 

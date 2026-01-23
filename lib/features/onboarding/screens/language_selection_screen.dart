@@ -39,13 +39,11 @@ class LanguageSelectionScreen extends ConsumerStatefulWidget {
 }
 
 class _LanguageSelectionScreenState extends ConsumerState<LanguageSelectionScreen> {
-  // Initialize with 'en' but will update from provider in initState
   String _selectedLanguage = 'en';
 
   @override
   void initState() {
     super.initState();
-    // Defer state update to next frame to avoid build state issues
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _selectedLanguage = ref.read(localizationProvider).languageCode;
@@ -123,7 +121,6 @@ class _LanguageSelectionScreenState extends ConsumerState<LanguageSelectionScree
         return GestureDetector(
           onTap: () {
             setState(() => _selectedLanguage = lang.code);
-            // Updating provider immediately for better UX if needed, or keep local state until continue
             ref.read(localizationProvider.notifier).setLocale(Locale(lang.code));
           },
           child: AnimatedContainer(
