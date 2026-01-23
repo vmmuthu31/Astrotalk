@@ -407,24 +407,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Plan', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
-                      Text('Monthly', style: AppTypography.body),
+                      Text(context.tr('plan'), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                      Text(context.tr('monthly'), style: AppTypography.body),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Amount', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
-                      Text('₹99/month', style: AppTypography.body.copyWith(color: AppColors.accent)),
+                      Text(context.tr('amount'), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                      Text('₹99/${context.tr('perMonth').replaceAll('/', '')}', style: AppTypography.body.copyWith(color: AppColors.accent)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Payment', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
-                      Text('UPI AutoPay', style: AppTypography.body),
+                      Text(context.tr('payment'), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                      Text(context.tr('upiAutopay'), style: AppTypography.body),
                     ],
                   ),
                 ],
@@ -446,10 +446,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   disabledBackgroundColor: AppColors.secondary.withAlpha(128),
                 ),
                 child: _isUpgradeLoading
-                    ? const Row(
+                    ? Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
@@ -457,11 +457,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               valueColor: AlwaysStoppedAnimation(Colors.white),
                             ),
                           ),
-                          SizedBox(width: AppSpacing.md),
-                          Text('Processing...'),
+                          const SizedBox(width: AppSpacing.md),
+                          Text(context.tr('processing')),
                         ],
                       )
-                    : const Text('Upgrade - ₹99/mo'),
+                    : Text(context.tr('upgradeNow')),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -488,11 +488,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md),
-                          Text('Processing...', style: TextStyle(color: AppColors.accent)),
+                          Text(context.tr('processing'), style: const TextStyle(color: AppColors.accent)),
                         ],
                       )
                     : Text(
-                        '7-Day Free Trial',
+                        context.tr('startFreeTrial'),
                         style: TextStyle(color: _isAnyLoading ? AppColors.textSecondary : AppColors.accent),
                       ),
               ),

@@ -121,19 +121,28 @@ class AstrologyService {
       final endMonth = rashi['endMonth'] as int;
       final endDay = rashi['endDay'] as int;
 
+      bool isInRange = false;
+
       if (startMonth <= endMonth) {
-        if ((month == startMonth && day >= startDay) ||
-            (month == endMonth && day <= endDay) ||
-            (month > startMonth && month < endMonth)) {
-          return rashi['name'] as String;
+        if (month > startMonth && month < endMonth) {
+          isInRange = true;
+        } else if (month == startMonth && day >= startDay) {
+          isInRange = (month < endMonth) || (month == endMonth && day <= endDay);
+        } else if (month == endMonth && day <= endDay) {
+          isInRange = true;
         }
       } else {
-        if ((month == startMonth && day >= startDay) ||
-            (month == endMonth && day <= endDay) ||
-            (month > startMonth) ||
-            (month < endMonth)) {
-          return rashi['name'] as String;
+        if (month > startMonth || month < endMonth) {
+          isInRange = true;
+        } else if (month == startMonth && day >= startDay) {
+          isInRange = true;
+        } else if (month == endMonth && day <= endDay) {
+          isInRange = true;
         }
+      }
+
+      if (isInRange) {
+        return rashi['name'] as String;
       }
     }
 
