@@ -10,23 +10,27 @@ class AuthState {
   final User? user;
   final bool isLoading;
   final bool isOnboarded;
+  final Map<String, dynamic> registrationData;
 
   const AuthState({
     this.user,
     this.isLoading = true,
     this.isOnboarded = false,
+    this.registrationData = const {},
   });
 
   AuthState copyWith({
     User? user,
     bool? isLoading,
     bool? isOnboarded,
+    Map<String, dynamic>? registrationData,
     bool clearUser = false,
   }) {
     return AuthState(
       user: clearUser ? null : (user ?? this.user),
       isLoading: isLoading ?? this.isLoading,
       isOnboarded: isOnboarded ?? this.isOnboarded,
+      registrationData: registrationData ?? this.registrationData,
     );
   }
 }
@@ -57,6 +61,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  void updateRegistrationData(Map<String, dynamic> data) {
+    state = state.copyWith(
+      registrationData: {...state.registrationData, ...data},
+    );
+  }
+
   Future<void> setUser(User user) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -82,7 +92,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_userKey);
       await prefs.remove(_onboardedKey);
-      state = const AuthState(isLoading: false, isOnboarded: false);
+      state = const AuthState(isLoading: false, isOnboarded: false, registrationData: {});
     } catch (e) {
       print('Error logging out: $e');
     }

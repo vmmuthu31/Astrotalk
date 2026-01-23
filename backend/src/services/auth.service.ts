@@ -47,24 +47,17 @@ export class AuthService {
       data: { verified: true },
     });
 
-    let user = await prisma.user.findFirst({ where: { email } });
+    const existingUser = await prisma.user.findFirst({ where: { email } });
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email,
-          passwordHash: await bcrypt.hash(code, 10),
-          name: "User",
-          birthDate: new Date(),
-          birthTime: "12:00",
-          birthPlace: "Unknown",
-        },
+    if (existingUser) {
+      const token = this.app.jwt.sign({
+        id: existingUser.id,
+        email: existingUser.email,
       });
+      return { token, user: existingUser, isNewUser: false };
     }
 
-    const token = this.app.jwt.sign({ id: user.id, email: user.email });
-
-    return { token, user };
+    return { isNewUser: true };
   }
 
   async register(data: any) {
