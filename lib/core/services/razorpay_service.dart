@@ -21,7 +21,7 @@ class RazorpayService {
   String? _currentSubscriptionId;
   bool get _isWebPlatform => kIsWeb;
   
-  static const String _backendUrl = 'http://localhost:3000/api/payment';
+  static const String _backendUrl = 'https://astrotalk-be.vercel.app/api/payment';
   
   PaymentSuccessCallback? onPaymentSuccess;
   PaymentFailureCallback? onPaymentFailure;
