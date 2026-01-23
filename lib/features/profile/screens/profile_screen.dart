@@ -370,7 +370,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Text(
-                  isSubscribed ? 'Premium Member' : 'Free Trial',
+                  isSubscribed ? context.tr('premiumMember') : context.tr('freeTrial'),
                   style: AppTypography.h4.copyWith(color: AppColors.accent),
                 ),
               ),
@@ -382,7 +382,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     borderRadius: BorderRadius.circular(AppBorderRadius.full),
                   ),
                   child: Text(
-                    'Active',
+                    context.tr('active'),
                     style: AppTypography.small.copyWith(color: AppColors.success),
                   ),
                 ),
@@ -391,7 +391,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: AppSpacing.md),
           if (isSubscribed) ...[
             Text(
-              'You have full access to all premium features',
+              context.tr('fullAccessMessage'),
               style: AppTypography.body.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -432,7 +432,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           ] else ...[
             Text(
-              'Upgrade to unlock all premium features',
+              context.tr('upgradeMessage'),
               style: AppTypography.body.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.lg),
