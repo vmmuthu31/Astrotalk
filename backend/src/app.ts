@@ -15,9 +15,9 @@ import { cronRoutes } from "./routes/cron.routes";
 import { initCronJobs } from "./cron/scheduler";
 
 server.register(cors, {
-  origin: true, // Reflects the request origin
+  origin: "*", // Allow all origins explicitly
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  credentials: false, // Disabled to allow wildcard origin if needed, or let Vercel handle it
+  credentials: false,
 });
 
 server.register(customJwt, {
