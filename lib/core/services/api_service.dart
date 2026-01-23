@@ -52,7 +52,9 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      await setToken(data['token']);
+      if (data['token'] != null) {
+        await setToken(data['token']);
+      }
       return data;
     } else {
       final error = jsonDecode(response.body);

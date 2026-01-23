@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,12 +23,15 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final notifier = ref.read(authProvider.notifier);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: authState.isOnboarded ? '/home' : '/welcome',
+    refreshListenable: GoRouterRefreshStream(notifier.stream),
+    initialLocation: '/welcome',
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
+
       if (authState.isLoading) return null;
       
       final isOnboarding = state.matchedLocation.startsWith('/welcome') ||
@@ -38,7 +42,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/nakshatra-mapping') ||
           state.matchedLocation.startsWith('/subscription');
 
+      debugPrint('Router Redirect Check:');
+      debugPrint('  Path: ${state.matchedLocation}');
+      debugPrint('  isOnboarded: ${authState.isOnboarded}');
+      debugPrint('  isOnboarding Route: $isOnboarding');
+
       if (!authState.isOnboarded && !isOnboarding) {
+        debugPrint('  -> Redirecting to /welcome');
         return '/welcome';
       }
 
@@ -141,3 +151,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
