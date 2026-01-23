@@ -126,12 +126,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return names[code] ?? 'English';
   }
 
-  void _toggleTheme(WidgetRef ref) {
-    final current = ref.read(themeProvider);
-    ref.read(themeProvider.notifier).setTheme(
-      current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
-    );
-  }
+
 
   void _showLanguagePicker(BuildContext context, WidgetRef ref) {
     final languages = [
@@ -199,11 +194,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+  void _showTermsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text(context.tr('termsOfService'), style: AppTypography.h4),
+        content: SingleChildScrollView(
+          child: Text(
+            'Terms and Conditions\n\n1. Acceptance of Terms\nBy accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement.\n\n2. Use License\nPermission is granted to temporarily download one copy of the materials (information or software) on Bhagya for personal, non-commercial transitory viewing only.\n\n3. Disclaimer\nThe materials on Bhagya are provided on an \'as is\' basis. Bhagya makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.',
+            style: AppTypography.body,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('done'), style: TextStyle(color: AppColors.accent)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text(context.tr('privacyPolicy'), style: AppTypography.h4),
+        content: SingleChildScrollView(
+          child: Text(
+            'Privacy Policy\n\n1. Information Collection\nWe collect information such as your name, email address, time of birth, and place of birth to provide accurate astrological predictions.\n\n2. Use of Information\nThe information we collect is used to personalize your experience and improve our customer service.\n\n3. Data Protection\nWe implement a variety of security measures to maintain the safety of your personal information when you enter, submit, or access your personal information.',
+            style: AppTypography.body,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('done'), style: TextStyle(color: AppColors.accent)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -241,12 +273,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 value: _getLanguageName(ref.watch(localizationProvider).languageCode),
                 onTap: () => _showLanguagePicker(context, ref),
               ),
-              _SettingsRow(
-                icon: ref.watch(themeProvider) == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode,
-                label: context.tr('theme'),
-                value: ref.watch(themeProvider) == ThemeMode.dark ? context.tr('dark') : context.tr('light'),
-                onTap: () => _toggleTheme(ref),
-              ),
             ]),
             const SizedBox(height: AppSpacing.xl2),
             Text(context.tr('account'), style: AppTypography.cardTitle),
@@ -260,12 +286,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               _SettingsRow(
                 icon: Icons.description,
                 label: context.tr('termsOfService'),
-                onTap: () => _launchUrl('https://bhagya.app/terms'),
+                onTap: () => _showTermsDialog(context),
               ),
               _SettingsRow(
                 icon: Icons.shield,
                 label: context.tr('privacyPolicy'),
-                onTap: () => _launchUrl('https://bhagya.app/privacy'),
+                onTap: () => _showPrivacyDialog(context),
               ),
             ]),
             const SizedBox(height: AppSpacing.xl2),

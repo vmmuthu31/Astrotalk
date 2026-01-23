@@ -132,9 +132,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: AppSpacing.md),
+              Center(
+                child: TextButton(
+                  onPressed: () => _showTermsDialog(context),
+                  child: Text(
+                    'Terms and Conditions',
+                    style: AppTypography.small.copyWith(
+                      color: AppColors.textSecondary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showTermsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Text('Terms and Conditions', style: AppTypography.h4),
+        content: SingleChildScrollView(
+          child: Text(
+            'Terms and Conditions\n\n1. Acceptance of Terms\nBy accessing and using this application, you accept and agree to be bound by the terms and provision of this agreement.\n\n2. Use License\nPermission is granted to temporarily download one copy of the materials (information or software) on Bhagya for personal, non-commercial transitory viewing only.\n\n3. Disclaimer\nThe materials on Bhagya are provided on an \'as is\' basis. Bhagya makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.',
+            style: AppTypography.body,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Close', style: TextStyle(color: AppColors.accent)),
+          ),
+        ],
       ),
     );
   }

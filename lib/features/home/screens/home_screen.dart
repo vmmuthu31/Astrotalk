@@ -179,6 +179,43 @@ Discover your daily luck with Bhagya app!''';
     }
   }
 
+  void _showLuckyDialog(BuildContext context, String title, String value, String description) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardBackground,
+        title: Row(
+          children: [
+            const Icon(Icons.auto_awesome, color: AppColors.accent),
+            const SizedBox(width: AppSpacing.sm),
+            Text(title, style: AppTypography.h4),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: AppTypography.h3.copyWith(color: AppColors.accent),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              description,
+              style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(context.tr('done'), style: TextStyle(color: AppColors.accent)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -224,6 +261,12 @@ Discover your daily luck with Bhagya app!''';
                       icon: Icons.water_drop,
                       colorHex: prediction['luckyColorHex'] as String,
                       index: 0,
+                      onTap: () => _showLuckyDialog(
+                        context, 
+                        context.tr('luckyColor'), 
+                        prediction['luckyColor'] as String,
+                        'Wear this color to attract positive energy today.',
+                      ),
                     ),
                     LuckyCard(
                       title: context.tr('luckyNumber'),
@@ -231,18 +274,36 @@ Discover your daily luck with Bhagya app!''';
                       icon: Icons.tag,
                       color: AppColors.accent,
                       index: 1,
+                      onTap: () => _showLuckyDialog(
+                        context, 
+                        context.tr('luckyNumber'), 
+                        prediction['luckyNumber'].toString(),
+                        'Use this number for important decisions or timings.',
+                      ),
                     ),
                     LuckyCard(
                       title: context.tr('luckyDirection'),
                       value: prediction['luckyDirection'] as String,
                       icon: _directionIcons[prediction['luckyDirection']] ?? Icons.explore,
                       index: 2,
+                      onTap: () => _showLuckyDialog(
+                        context, 
+                        context.tr('luckyDirection'), 
+                        prediction['luckyDirection'] as String,
+                        'Face this direction for better concentration and luck.',
+                      ),
                     ),
                     LuckyCard(
                       title: context.tr('luckyTime'),
                       value: prediction['luckyTime'] as String,
                       icon: Icons.access_time,
                       index: 3,
+                      onTap: () => _showLuckyDialog(
+                        context, 
+                        context.tr('luckyTime'), 
+                        prediction['luckyTime'] as String,
+                        'Undertake important tasks during this auspicious time.',
+                      ),
                     ),
                     if (prediction['mantra'] != null) ...[
                       const SizedBox(height: AppSpacing.sm),
@@ -281,18 +342,6 @@ Discover your daily luck with Bhagya app!''';
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(_getGreeting(context), style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
-              IconButton(
-                onPressed: () {
-                  final themeMode = ref.read(themeProvider);
-                  ref.read(themeProvider.notifier).setTheme(
-                    themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light,
-                  );
-                },
-                icon: Icon(
-                  ref.watch(themeProvider) == ThemeMode.light ? Icons.dark_mode : Icons.light_mode,
-                  color: AppColors.accent,
-                ),
-              ),
             ],
           ),
           Text(userName, style: AppTypography.h3),
