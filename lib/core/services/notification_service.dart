@@ -65,9 +65,17 @@ class NotificationService {
     debugPrint('[Notification] Tapped: ${response.payload}');
   }
 
-  Future<void> scheduleDailyNotification() async {
+  Future<void> scheduleDailyNotification({
+    TimeOfDay? time,
+    bool enabled = true,
+  }) async {
     try {
       await _localNotifications.cancelAll();
+
+      if (!enabled) {
+        debugPrint('[Notification] Daily notifications disabled');
+        return;
+      }
 
       final androidDetails = AndroidNotificationDetails(
         'daily_predictions',
@@ -90,13 +98,16 @@ class NotificationService {
       );
 
       final now = tz.TZDateTime.now(tz.local);
+      
+      final scheduleTime = time ?? const TimeOfDay(hour: 8, minute: 0);
+
       var scheduledDate = tz.TZDateTime(
         tz.local,
         now.year,
         now.month,
         now.day,
-        8, // 8 AM
-        0,
+        scheduleTime.hour,
+        scheduleTime.minute,
       );
 
       if (scheduledDate.isBefore(now)) {
@@ -114,7 +125,7 @@ class NotificationService {
         matchDateTimeComponents: DateTimeComponents.time,
       );
 
-      debugPrint('[Notification] Scheduled daily at 8:00 AM IST');
+      debugPrint('[Notification] Scheduled daily at ${scheduleTime.format(navigatorKey.currentContext!)}');
     } catch (e) {
       debugPrint('[Notification] Scheduling error: $e');
     }
