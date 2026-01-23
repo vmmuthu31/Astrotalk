@@ -16,6 +16,8 @@ import { initCronJobs } from "./cron/scheduler";
 
 server.register(cors, {
   origin: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  credentials: true,
 });
 
 server.register(customJwt, {
