@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'core/providers/auth_provider.dart';
+import 'core/services/notification_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/providers/localization_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/localization/app_localizations.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  NotificationService().initialize();
+  
   runApp(const ProviderScope(child: BhagyaApp()));
 }
 
