@@ -132,10 +132,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       final authState = ref.read(authProvider);
       final email = authState.registrationData['email'] as String?;
 
+      User user;
       try {
-        await ApiService.register(
+        final userData = await ApiService.register(
           email: email,
-          phone: DateTime.now().millisecondsSinceEpoch.toString(),
+          phone: DateTime.now().millisecondsSinceEpoch.toString(), // Keep phone as timestamp for now if unique constraint required
           name: name,
           birthDate: birthDate,
           birthTime: birthTime,
@@ -144,20 +145,32 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           nakshatra: nakshatra,
         );
         debugPrint('User registered in backend successfully');
+        
+        user = User(
+          id: userData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(), 
+          name: name,
+          birthDate: birthDate,
+          birthTime: birthTime,
+          birthPlace: birthPlace,
+          nakshatra: nakshatra,
+          rashi: rashi,
+          isSubscribed: isSubscribed,
+          notificationsEnabled: userData['notificationsEnabled'] ?? true,
+          notificationTime: userData['notificationTime'] ?? "08:00",
+        );
       } catch (e) {
-        debugPrint('Backend registration skipped or failed: $e');
+        debugPrint('Backend registration failed: $e');
+         user = User(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: name,
+          birthDate: birthDate,
+          birthTime: birthTime,
+          birthPlace: birthPlace,
+          nakshatra: nakshatra,
+          rashi: rashi,
+          isSubscribed: isSubscribed,
+        );
       }
-
-      final user = User(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: name,
-        birthDate: birthDate,
-        birthTime: birthTime,
-        birthPlace: birthPlace,
-        nakshatra: nakshatra,
-        rashi: rashi,
-        isSubscribed: isSubscribed,
-      );
 
       await ref.read(authProvider.notifier).setUser(user);
       await ref.read(authProvider.notifier).setOnboarded(true);
