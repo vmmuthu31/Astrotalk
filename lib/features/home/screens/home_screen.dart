@@ -123,20 +123,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with SingleTickerProvid
       debugPrint('TTS Stop Result: $result');
       setState(() => _isSpeaking = false);
     } else {
-      var lang = _getTtsLanguage(localeCode);
-      debugPrint('TTS Target Language: $lang');
+      var lang = 'hi-IN';
+      debugPrint('TTS Target Language: $lang (Forced for Mantra)');
 
-      // Check if language is available
       final isAvailable = await _tts.isLanguageAvailable(lang);
       debugPrint('TTS Language Available: $isAvailable');
 
       if (!isAvailable) {
-         debugPrint('Target language $lang not available, falling back to English');
-         lang = 'en-US';
+         debugPrint('Target language $lang not available, checking for other Hindi variants or fallback');
+         final languages = await _tts.getLanguages;
+         if (languages.toString().contains('hi')) {
+           lang = 'hi';
+         } else {
+           lang = 'en-US'; 
+         }
       }
 
       final langResult = await _tts.setLanguage(lang);
       debugPrint('TTS Set Language Result: $langResult');
+      
+      await _tts.setSpeechRate(0.5);
       
       if (langResult == 0 || langResult == 1) {
          debugPrint('TTS Speaking: $mantra');
