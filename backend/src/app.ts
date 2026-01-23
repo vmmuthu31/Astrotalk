@@ -11,6 +11,8 @@ const server: FastifyInstance = Fastify({
 
 import { authRoutes } from "./routes/auth.routes";
 import { paymentRoutes } from "./routes/payment.routes";
+import { cronRoutes } from "./routes/cron.routes";
+import { initCronJobs } from "./cron/scheduler";
 
 server.register(cors, {
   origin: true,
@@ -22,6 +24,7 @@ server.register(customJwt, {
 
 server.register(authRoutes, { prefix: "/api/auth" });
 server.register(paymentRoutes, { prefix: "/api/payment" });
+server.register(cronRoutes, { prefix: "/api/cron" });
 
 server.get("/", async () => {
   return { message: "Welcome to the Astro Guide API 🚀" };
@@ -36,6 +39,8 @@ const start = async () => {
     const port = parseInt(process.env.PORT || "3000");
     await server.listen({ port, host: "0.0.0.0" });
     console.log(`Server listening on port ${port}`);
+
+    initCronJobs();
   } catch (err) {
     server.log.error(err);
     process.exit(1);
