@@ -69,7 +69,7 @@ class NotificationService {
     try {
       await _localNotifications.cancelAll();
 
-      const androidDetails = AndroidNotificationDetails(
+      final androidDetails = AndroidNotificationDetails(
         'daily_predictions',
         'Daily Predictions',
         channelDescription: 'Daily lucky predictions and cosmic guidance',
@@ -78,13 +78,13 @@ class NotificationService {
         icon: '@mipmap/ic_launcher',
       );
 
-      const iosDetails = DarwinNotificationDetails(
+      final iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
       );
 
-      const details = NotificationDetails(
+      final details = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
@@ -121,7 +121,7 @@ class NotificationService {
   }
 
   Future<void> showInstantNotification(String title, String body) async {
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       'instant_notifications',
       'Instant Notifications',
       channelDescription: 'Immediate notifications',
@@ -129,9 +129,9 @@ class NotificationService {
       priority: Priority.high,
     );
 
-    const iosDetails = DarwinNotificationDetails();
+    final iosDetails = DarwinNotificationDetails();
 
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
