@@ -6,7 +6,10 @@ class User {
   final String? birthPlace;
   final String? nakshatra;
   final String? rashi;
+  final String? rashi;
   final bool isSubscribed;
+  final bool notificationsEnabled;
+  final String notificationTime;
 
   const User({
     required this.id,
@@ -16,7 +19,10 @@ class User {
     this.birthPlace,
     this.nakshatra,
     this.rashi,
+    this.rashi,
     this.isSubscribed = false,
+    this.notificationsEnabled = true,
+    this.notificationTime = "08:00",
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,6 +34,8 @@ class User {
         'nakshatra': nakshatra,
         'rashi': rashi,
         'isSubscribed': isSubscribed,
+        'notificationsEnabled': notificationsEnabled,
+        'notificationTime': notificationTime,
       };
 
   factory User.fromJson(Map<String, dynamic> json) => User(
@@ -39,6 +47,8 @@ class User {
         nakshatra: json['nakshatra'] as String?,
         rashi: json['rashi'] as String?,
         isSubscribed: json['isSubscribed'] as bool? ?? false,
+        notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
+        notificationTime: json['notificationTime'] as String? ?? "08:00",
       );
 
   User copyWith({
@@ -50,6 +60,8 @@ class User {
     String? nakshatra,
     String? rashi,
     bool? isSubscribed,
+    bool? notificationsEnabled,
+    String? notificationTime,
   }) {
     return User(
       id: id ?? this.id,
@@ -60,6 +72,8 @@ class User {
       nakshatra: nakshatra ?? this.nakshatra,
       rashi: rashi ?? this.rashi,
       isSubscribed: isSubscribed ?? this.isSubscribed,
+      notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      notificationTime: notificationTime ?? this.notificationTime,
     );
   }
 }
