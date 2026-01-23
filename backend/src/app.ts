@@ -15,7 +15,7 @@ import { cronRoutes } from "./routes/cron.routes";
 import { initCronJobs } from "./cron/scheduler";
 
 server.register(cors, {
-  origin: "*", // Allow all origins explicitly
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   credentials: false,
 });
