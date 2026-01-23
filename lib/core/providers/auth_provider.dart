@@ -97,6 +97,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       print('Error logging out: $e');
     }
   }
+
+  Future<void> refreshUser() async {
+    await _loadUser();
+  }
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

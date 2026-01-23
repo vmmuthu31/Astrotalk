@@ -127,7 +127,16 @@ export class AuthService {
   }
 
   async updateProfile(userId: string, data: any) {
-    const { name, birthDate, birthTime, birthPlace, rashi, nakshatra } = data;
+    const {
+      name,
+      birthDate,
+      birthTime,
+      birthPlace,
+      rashi,
+      nakshatra,
+      notificationsEnabled,
+      notificationTime,
+    } = data;
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -138,6 +147,8 @@ export class AuthService {
         birthPlace,
         rashi,
         nakshatra,
+        notificationsEnabled,
+        notificationTime,
       },
     });
 
