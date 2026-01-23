@@ -1,22 +1,86 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/services/notification_service.dart';
 
-class NotificationSettingsScreen extends StatefulWidget {
+class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  ConsumerState<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState extends ConsumerState<NotificationSettingsScreen> {
   bool _dailyEnabled = true;
   bool _weeklyEnabled = false;
-  DateTime _notificationTime = DateTime(2024, 1, 1, 7, 0);
+  DateTime _notificationTime = DateTime(2024, 1, 1, 8, 0);
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    final user = ref.read(authProvider).user;
+    if (user != null) {
+      _dailyEnabled = user.notificationsEnabled;
+      
+      final parts = user.notificationTime.split(':');
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]) ?? 8;
+        final minute = int.tryParse(parts[1]) ?? 0;
+        final now = DateTime.now();
+        _notificationTime = DateTime(now.year, now.month, now.day, hour, minute);
+      }
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = ref.read(authProvider).user;
+      if (user == null) return;
+
+      final timeString = '${_notificationTime.hour.toString().padLeft(2, '0')}:${_notificationTime.minute.toString().padLeft(2, '0')}';
+      
+      await ApiService.updateProfile(user.id, {
+        'notificationsEnabled': _dailyEnabled,
+        'notificationTime': timeString,
+      });
+
+      await ref.read(authProvider.notifier).refreshUser();
+
+      await NotificationService().scheduleDailyNotification(
+        time: TimeOfDay(hour: _notificationTime.hour, minute: _notificationTime.minute),
+        enabled: _dailyEnabled,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.tr('settingsSaved'))),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save settings: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   String _formatTime(DateTime date) {
     return DateFormat('hh:mm a').format(date);
@@ -45,7 +109,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   child: Text(context.tr('notificationTime'), style: AppTypography.h4, overflow: TextOverflow.ellipsis),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _saveSettings();
+                  },
                   child: Text(context.tr('done'), style: AppTypography.body.copyWith(color: AppColors.accent)),
                 ),
               ],
@@ -77,6 +144,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_isLoading)
+              const LinearProgressIndicator(color: AppColors.accent, backgroundColor: Colors.transparent),
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.tr('dailyNotifications'),
@@ -91,7 +160,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                   description: context.tr('dailyPredictionsDesc'),
                   trailing: Switch.adaptive(
                     value: _dailyEnabled,
-                    onChanged: (v) => setState(() => _dailyEnabled = v),
+                    onChanged: (v) {
+                      setState(() => _dailyEnabled = v);
+                      _saveSettings();
+                    },
                     activeColor: AppColors.secondary,
                     activeTrackColor: AppColors.secondary.withAlpha(128),
                     inactiveTrackColor: AppColors.backgroundSecondary,
