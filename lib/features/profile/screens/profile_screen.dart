@@ -305,6 +305,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildProfileCard(String name, String nakshatra, String rashi) {
+    final user = ref.watch(authProvider).user;
     return Center(
       child: Container(
         width: double.infinity,
@@ -316,14 +317,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary,
-              ),
-              child: const Icon(Icons.star, size: 32, color: AppColors.accent),
+            Stack(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primary,
+                  ),
+                  child: const Icon(Icons.star, size: 32, color: AppColors.accent),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () => context.push('/edit-profile'),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.cardBackground, width: 2),
+                      ),
+                      child: const Icon(Icons.edit, size: 14, color: Colors.black),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -337,8 +359,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               style: AppTypography.body.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
+            if (user?.birthDate != null || user?.birthPlace != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              Divider(color: Colors.white.withAlpha(25)),
+              const SizedBox(height: AppSpacing.md),
+              if (user?.birthDate != null)
+                _buildInfoRow(Icons.cake, user!.birthDate!),
+              if (user?.birthTime != null)
+                _buildInfoRow(Icons.access_time, user!.birthTime!),
+              if (user?.birthPlace != null)
+                _buildInfoRow(Icons.location_on, user!.birthPlace!),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: AppColors.textSecondary),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            text,
+            style: AppTypography.small.copyWith(color: AppColors.textSecondary),
+          ),
+        ],
       ),
     );
   }
