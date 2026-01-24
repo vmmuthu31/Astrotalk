@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/services/astrology_service.dart';
+import '../../../core/services/vedic_astrology_service.dart';
 
 class NakshatraMappingScreen extends StatefulWidget {
   final String name;
@@ -86,8 +86,8 @@ class _NakshatraMappingScreenState extends State<NakshatraMappingScreen>
     if (!mounted) return;
 
     final birthDate = DateFormat('yyyy-MM-dd').parse(widget.birthDate);
-    final rashi = AstrologyService.getRashiFromDate(birthDate);
-    final nakshatra = AstrologyService.getNakshatraFromDate(birthDate, widget.birthTime);
+    final rashi = VedicAstrologyService.calculateRashi(birthDate, widget.birthTime);
+    final nakshatra = VedicAstrologyService.calculateNakshatra(birthDate, widget.birthTime);
 
     context.go('/subscription', extra: {
       'name': widget.name,

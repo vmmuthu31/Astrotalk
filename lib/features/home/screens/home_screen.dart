@@ -11,6 +11,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/localization_provider.dart';
 import '../../../core/services/astrology_service.dart';
+import '../../../core/services/vedic_astrology_service.dart';
 import '../../../shared/widgets/star_field.dart';
 import '../widgets/lucky_card.dart';
 import '../../../core/providers/theme_provider.dart';
@@ -351,7 +352,7 @@ Discover your daily luck with Bhagya app!''';
   }
 
   Widget _buildRashiCard(String? rashi, String? nakshatra) {
-    final displayRashi = rashi != null ? '${AstrologyService.getRashiEnglish(rashi)} ($rashi)' : 'Not set';
+    final displayRashi = rashi != null ? '${VedicAstrologyService.getRashiEnglish(rashi)} ($rashi)' : 'Not set';
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
