@@ -332,7 +332,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   right: 0,
                   bottom: 0,
                   child: GestureDetector(
-                    onTap: () => context.push('/edit-profile'),
+                    onTap: () => context.push('/profile/edit'),
                     child: Container(
                       width: 28,
                       height: 28,

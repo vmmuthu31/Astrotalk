@@ -124,6 +124,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: ProfileScreen(),
             ),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) => const EditProfileScreen(),
+              ),
+            ],
           ),
         ],
       ),
@@ -131,10 +138,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/notification-settings',
         builder: (context, state) => const NotificationSettingsScreen(),
       ),
-      GoRoute(
-        path: '/edit-profile',
-        builder: (context, state) => const EditProfileScreen(),
-      ),
+
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),

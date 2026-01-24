@@ -199,9 +199,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ],
             ),
             backgroundColor: AppColors.success,
+            duration: const Duration(seconds: 2),
           ),
         );
-        context.pop();
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) context.go('/profile');
       }
     } catch (e) {
       if (mounted) {
