@@ -60,6 +60,12 @@ export class AuthController {
       const user = await this.authService.updateProfile(userId, req.body);
       return reply.send(user);
     } catch (err: any) {
+      if (
+        err.code === "P2025" ||
+        err.message?.includes("Record to update not found")
+      ) {
+        return reply.code(404).send({ error: "User not found" });
+      }
       return reply.code(500).send({ error: err.message });
     }
   };
