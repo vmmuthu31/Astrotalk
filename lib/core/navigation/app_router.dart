@@ -14,6 +14,7 @@ import '../../features/home/screens/home_screen.dart';
 import '../../features/nakshatra/screens/nakshatra_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/notification_settings_screen.dart';
+import '../../features/profile/screens/edit_profile_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/otp_verification_screen.dart';
@@ -129,6 +130,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notification-settings',
         builder: (context, state) => const NotificationSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/login',
