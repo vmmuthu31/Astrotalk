@@ -130,5 +130,11 @@
   "password": "Password",
   "createAccount": "Create Account",
   "dontHaveAccount": "Don't have an account? Register",
-  "alreadyHaveAccount": "Already have an account? Login"
+  "alreadyHaveAccount": "Already have an account? Login",
+
+  "editProfile": "Edit Profile",
+  "save": "Save",
+  "profileUpdated": "Profile updated successfully",
+  "error": "Error",
+  "rashiRecalculateNote": "Your Rashi and Nakshatra will be recalculated based on your updated birth details using Vedic astrology."
 }
