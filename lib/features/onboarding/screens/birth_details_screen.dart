@@ -7,7 +7,10 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../shared/widgets/star_field.dart';
-import '../../../shared/widgets/app_button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../../../core/services/api_service.dart';
+import '../../../core/providers/auth_provider.dart';
 
 class BirthDetailsScreen extends StatefulWidget {
   final String language;
@@ -15,12 +18,13 @@ class BirthDetailsScreen extends StatefulWidget {
   const BirthDetailsScreen({super.key, this.language = 'en'});
 
   @override
-  State<BirthDetailsScreen> createState() => _BirthDetailsScreenState();
+  ConsumerState<BirthDetailsScreen> createState() => _BirthDetailsScreenState();
 }
 
-class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
+class _BirthDetailsScreenState extends ConsumerState<BirthDetailsScreen> {
   final _nameController = TextEditingController();
   final _placeController = TextEditingController();
+  bool _isLoading = false;
   DateTime _birthDate = DateTime(1995, 1, 1);
   DateTime _birthTime = DateTime(1995, 1, 1, 6, 0);
 
@@ -96,16 +100,45 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
     );
   }
 
-  void _handleContinue() {
+  Future<void> _handleGoogleSignUp() async {
     if (!_isFormValid) return;
 
-    context.push('/nakshatra-mapping', extra: {
-      'name': _nameController.text.trim(),
-      'birthDate': DateFormat('yyyy-MM-dd').format(_birthDate),
-      'birthTime': DateFormat('HH:mm').format(_birthTime),
-      'birthPlace': _placeController.text.trim(),
-      'language': widget.language,
-    });
+    setState(() => _isLoading = true);
+    try {
+      final googleSignIn = GoogleSignIn();
+      final account = await googleSignIn.signIn();
+      
+      if (account != null) {
+        final auth = await account.authentication;
+        if (auth.idToken != null) {
+          final authData = await ApiService.googleLogin(auth.idToken!);
+          
+          if (mounted) {
+            final userId = authData['user']['id'];
+            await ApiService.updateProfile(userId, {
+              'name': _nameController.text.trim(),
+              'birthPlace': _placeController.text.trim(),
+              'birthDate': DateFormat('yyyy-MM-dd').format(_birthDate),
+              'birthTime': DateFormat('HH:mm').format(_birthTime),
+              'language': widget.language,
+            });
+
+            await ref.read(authProvider.notifier).refreshUser();
+            await ref.read(authProvider.notifier).setOnboarded(true);
+
+            if (mounted) context.go('/subscription');
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in failed. Please try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -166,11 +199,13 @@ class _BirthDetailsScreenState extends State<BirthDetailsScreen> {
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.xl3),
-                  AppButton(
-                    text: context.tr('continue'),
-                    onPressed: _isFormValid ? _handleContinue : null,
-                    backgroundColor: _isFormValid ? AppColors.secondary : AppColors.backgroundSecondary,
-                  ),
+                  _isLoading 
+                      ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+                      : AppButton(
+                          text: 'Confirm & Sign in with Google',
+                          onPressed: _isFormValid ? _handleGoogleSignUp : null,
+                          backgroundColor: _isFormValid ? AppColors.secondary : AppColors.backgroundSecondary,
+                        ),
                 ],
               ),
             ),
