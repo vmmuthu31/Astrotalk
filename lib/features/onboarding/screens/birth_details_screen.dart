@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../shared/models/user.dart';
 
 class BirthDetailsScreen extends ConsumerStatefulWidget {
   final String language;
@@ -116,7 +117,7 @@ class _BirthDetailsScreenState extends ConsumerState<BirthDetailsScreen> {
           
           if (mounted) {
             final userId = authData['user']['id'];
-            await ApiService.updateProfile(userId, {
+            final updatedUserData = await ApiService.updateProfile(userId, {
               'name': _nameController.text.trim(),
               'birthPlace': _placeController.text.trim(),
               'birthDate': DateFormat('yyyy-MM-dd').format(_birthDate),
@@ -124,7 +125,8 @@ class _BirthDetailsScreenState extends ConsumerState<BirthDetailsScreen> {
               'language': widget.language,
             });
 
-            await ref.read(authProvider.notifier).refreshUser();
+            final updatedUser = User.fromJson(updatedUserData);
+            await ref.read(authProvider.notifier).setUser(updatedUser);
             await ref.read(authProvider.notifier).setOnboarded(true);
 
             if (mounted) context.go('/subscription');
