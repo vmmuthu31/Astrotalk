@@ -122,58 +122,58 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _completeOnboarding({bool isSubscribed = false}) async {
     try {
-      final name = _params['name'] ?? 'User';
-      final birthDate = _params['birthDate'] ?? '';
-      final birthTime = _params['birthTime'] ?? '';
-      final birthPlace = _params['birthPlace'] ?? '';
-      final nakshatra = _params['nakshatra'] ?? '';
-      final rashi = _params['rashi'] ?? '';
-
       final authState = ref.read(authProvider);
-      final email = authState.registrationData['email'] as String?;
+      final currentUser = authState.user;
 
-      User user;
-      try {
-        final userData = await ApiService.register(
-          email: email,
-          phone: DateTime.now().millisecondsSinceEpoch.toString(), // Keep phone as timestamp for now if unique constraint required
-          name: name,
-          birthDate: birthDate,
-          birthTime: birthTime,
-          birthPlace: birthPlace,
-          rashi: rashi,
-          nakshatra: nakshatra,
-        );
-        debugPrint('User registered in backend successfully');
-        
-        user = User(
-          id: userData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(), 
-          name: name,
-          birthDate: birthDate,
-          birthTime: birthTime,
-          birthPlace: birthPlace,
-          nakshatra: nakshatra,
-          rashi: rashi,
-          isSubscribed: isSubscribed,
-          notificationsEnabled: userData['notificationsEnabled'] ?? true,
-          notificationTime: userData['notificationTime'] ?? "08:00",
-        );
-      } catch (e) {
-        debugPrint('Backend registration failed: $e');
-         user = User(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: name,
-          birthDate: birthDate,
-          birthTime: birthTime,
-          birthPlace: birthPlace,
-          nakshatra: nakshatra,
-          rashi: rashi,
+      if (currentUser != null) {
+        final updatedUser = currentUser.copyWith(
           isSubscribed: isSubscribed,
         );
+        await ref.read(authProvider.notifier).setUser(updatedUser);
+        await ref.read(authProvider.notifier).setOnboarded(true);
+      } else {
+        final name = _params['name'] ?? 'User';
+        final birthDate = _params['birthDate'] ?? '';
+        final birthTime = _params['birthTime'] ?? '';
+        final birthPlace = _params['birthPlace'] ?? '';
+        final nakshatra = _params['nakshatra'] ?? '';
+        final rashi = _params['rashi'] ?? '';
+        final email = authState.registrationData['email'] as String?;
+
+        try {
+          final userData = await ApiService.register(
+            email: email,
+            phone: DateTime.now().millisecondsSinceEpoch.toString(),
+            name: name,
+            birthDate: birthDate,
+            birthTime: birthTime,
+            birthPlace: birthPlace,
+            rashi: rashi,
+            nakshatra: nakshatra,
+          );
+          
+          final user = User(
+            id: userData['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(), 
+            name: name,
+            birthDate: birthDate,
+            birthTime: birthTime,
+            birthPlace: birthPlace,
+            nakshatra: nakshatra,
+            rashi: rashi,
+            isSubscribed: isSubscribed,
+            notificationsEnabled: userData['notificationsEnabled'] ?? true,
+            notificationTime: userData['notificationTime'] ?? "08:00",
+          );
+          
+          await ref.read(authProvider.notifier).setUser(user);
+          await ref.read(authProvider.notifier).setOnboarded(true);
+        } catch (e) {
+          debugPrint('Backend registration failed: $e');
+          // Still navigate home even if backend fails, strictly for UX
+           await ref.read(authProvider.notifier).setOnboarded(true);
+        }
       }
-
-      await ref.read(authProvider.notifier).setUser(user);
-      await ref.read(authProvider.notifier).setOnboarded(true);
+      
       if (mounted) context.go('/home');
     } catch (e) {
       debugPrint('Error completing onboarding: $e');
