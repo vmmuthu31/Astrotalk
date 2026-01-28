@@ -23,7 +23,11 @@ class WelcomeScreen extends StatelessWidget {
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.xl2),
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight - AppSpacing.xl2 * 2),
+                    constraints: BoxConstraints(
+                      minHeight: (constraints.maxHeight - AppSpacing.xl2 * 2) > 0 
+                          ? (constraints.maxHeight - AppSpacing.xl2 * 2) 
+                          : 0,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -34,7 +38,7 @@ class WelcomeScreen extends StatelessWidget {
                         const SizedBox(height: AppSpacing.xl4),
                         AppButton(
                           text: context.tr('getStarted'),
-                          onPressed: () => context.push('/email-entry'),
+                          onPressed: () => context.push('/login'),
                         ),
                         const SizedBox(height: AppSpacing.lg),
                       ],

@@ -25,6 +25,21 @@ export class AuthController {
     }
   };
 
+  googleLogin = async (req: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { token } = req.body as { token: string };
+      if (!token) {
+        return reply.code(400).send({ error: "Google token is required" });
+      }
+      const result = await this.authService.googleLogin(token);
+      return reply.send(result);
+    } catch (err: any) {
+      return reply
+        .code(401)
+        .send({ error: "Google Authentication Failed: " + err.message });
+    }
+  };
+
   sendOTP = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const { email } = req.body as { email: string };

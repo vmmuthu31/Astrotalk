@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -15,42 +17,44 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
   bool _isLoading = false;
 
-  Future<void> _sendOTP() async {
-    if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email'), backgroundColor: AppColors.warning),
-      );
-      return;
-    }
-
+  Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
-
     try {
-      await ApiService.sendOTP(_emailController.text.trim());
-      if (mounted) {
-        context.push('/otp-verification', extra: {
-          'email': _emailController.text.trim(),
-          'isLogin': true,
-        });
+      final googleSignIn = GoogleSignIn();
+      final account = await googleSignIn.signIn();
+      if (account != null) {
+        final auth = await account.authentication;
+        if (auth.idToken != null) {
+          final data = await ApiService.googleLogin(auth.idToken!);
+          
+          if (mounted) {
+            await ref.read(authProvider.notifier).refreshUser();
+            
+            final user = data['user'];
+            final isProfileComplete = user != null && 
+                                    user['birthPlace'] != 'Unknown' && 
+                                    user['birthPlace'] != null;
+
+            if (isProfileComplete) {
+              await ref.read(authProvider.notifier).setOnboarded(true);
+              if (mounted) context.go('/home');
+            } else {
+              if (mounted) context.go('/language');
+            }
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send OTP: $e'), backgroundColor: AppColors.warning),
+          SnackBar(content: Text('Google Sign-In failed: $e'), backgroundColor: AppColors.warning),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
   }
 
   @override
@@ -67,38 +71,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(context.tr('loginTitle'), style: AppTypography.h1),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                'Enter your email to receive a verification code',
+                'Sign in to access your cosmic guide',
                 style: AppTypography.body.copyWith(color: AppColors.textSecondary),
               ),
-              const SizedBox(height: AppSpacing.xl2),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                style: AppTypography.body,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  labelStyle: AppTypography.body.copyWith(color: AppColors.textSecondary),
-                  prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
-                  filled: true,
-                  fillColor: AppColors.backgroundSecondary,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppBorderRadius.md),
-                    borderSide: const BorderSide(color: AppColors.accent),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl2),
+              const Spacer(),
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _sendOTP,
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppBorderRadius.md),
                     ),
@@ -107,24 +91,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
                         )
-                      : Text(
-                          'Send OTP',
-                          style: AppTypography.body.copyWith(fontWeight: FontWeight.w600, color: Colors.white),
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Using Icon as placeholder, ideally use Google Logo asset
+                            const Icon(Icons.login, color:Colors.black87), 
+                            const SizedBox(width: 8),
+                            Text(
+                              'Sign in with Google',
+                              style: AppTypography.body.copyWith(fontWeight: FontWeight.w600, color: Colors.black87),
+                            ),
+                          ],
                         ),
                 ),
               ),
               const Spacer(),
-              Center(
-                child: TextButton(
-                  onPressed: () => context.go('/register'),
-                  child: Text(
-                    context.tr('dontHaveAccount'),
-                    style: AppTypography.body.copyWith(color: AppColors.accent),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -132,3 +115,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+

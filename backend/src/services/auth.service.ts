@@ -1,10 +1,54 @@
 import prisma from "../utils/db";
 import { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 import { generateOTP, sendOTPEmail } from "./email.service";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export class AuthService {
   constructor(private app: FastifyInstance) {}
+
+  async verifyGoogleToken(token: string) {
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      return ticket.getPayload();
+    } catch (error) {
+      throw new Error("Invalid Google Token");
+    }
+  }
+
+  async googleLogin(token: string) {
+    const payload = await this.verifyGoogleToken(token);
+
+    if (!payload || !payload.email) {
+      throw new Error("Invalid Google Token payload");
+    }
+
+    const { email, name, picture } = payload;
+
+    let user = await prisma.user.findFirst({ where: { email } });
+
+    if (!user) {
+      // Auto-register user
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: name || "Google User",
+          passwordHash: await bcrypt.hash(Math.random().toString(36), 10), // Random password
+          birthDate: new Date(),
+          birthTime: "12:00",
+          birthPlace: "Unknown",
+        },
+      });
+    }
+
+    const jwtToken = this.app.jwt.sign({ id: user.id, email: user.email });
+    return { token: jwtToken, user };
+  }
 
   async sendOTP(email: string) {
     const otp = generateOTP();

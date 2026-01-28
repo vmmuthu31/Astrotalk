@@ -140,6 +140,23 @@ class ApiService {
     await clearToken();
   }
 
+  static Future<Map<String, dynamic>> googleLogin(String token) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/google-login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      await setToken(data['token']);
+      return data;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['error'] ?? 'Google Login failed');
+    }
+  }
+
   static Future<bool> isLoggedIn() async {
     final token = await getToken();
     return token != null;

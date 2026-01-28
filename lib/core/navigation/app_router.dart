@@ -41,7 +41,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.matchedLocation.startsWith('/language') ||
           state.matchedLocation.startsWith('/birth-details') ||
           state.matchedLocation.startsWith('/nakshatra-mapping') ||
-          state.matchedLocation.startsWith('/subscription');
+          state.matchedLocation.startsWith('/subscription') ||
+          state.matchedLocation.startsWith('/login');
 
       debugPrint('Router Redirect Check:');
       debugPrint('  Path: ${state.matchedLocation}');

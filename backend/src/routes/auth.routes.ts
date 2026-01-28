@@ -8,6 +8,7 @@ export async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post("/register", authController.register);
   fastify.post("/login", authController.login);
+  fastify.post("/google-login", authController.googleLogin);
   fastify.post("/send-otp", authController.sendOTP);
   fastify.post("/verify-otp", authController.verifyOTP);
   fastify.put("/profile/:userId", authController.updateProfile);
