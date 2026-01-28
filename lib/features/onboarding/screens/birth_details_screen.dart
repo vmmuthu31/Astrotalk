@@ -7,12 +7,13 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../shared/widgets/star_field.dart';
+import '../../../shared/widgets/app_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/providers/auth_provider.dart';
 
-class BirthDetailsScreen extends StatefulWidget {
+class BirthDetailsScreen extends ConsumerStatefulWidget {
   final String language;
 
   const BirthDetailsScreen({super.key, this.language = 'en'});
