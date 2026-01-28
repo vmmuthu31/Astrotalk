@@ -72,6 +72,10 @@ export class AuthController {
   updateProfile = async (req: FastifyRequest, reply: FastifyReply) => {
     try {
       const { userId } = req.params as { userId: string };
+      console.log(
+        "DEBUG: updateProfile Body:",
+        JSON.stringify(req.body, null, 2),
+      );
       const user = await this.authService.updateProfile(userId, req.body);
       return reply.send(user);
     } catch (err: any) {
