@@ -117,13 +117,18 @@ class _BirthDetailsScreenState extends ConsumerState<BirthDetailsScreen> {
           
           if (mounted) {
             final userId = authData['user']['id'];
-            final updatedUserData = await ApiService.updateProfile(userId, {
+            final updateData = {
               'name': _nameController.text.trim(),
               'birthPlace': _placeController.text.trim(),
               'birthDate': DateFormat('yyyy-MM-dd').format(_birthDate),
               'birthTime': DateFormat('HH:mm').format(_birthTime),
               'language': widget.language,
-            });
+            };
+            
+            print('DEBUG: Updating Profile for User: $userId');
+            print('DEBUG: Data Payload: $updateData');
+
+            final updatedUserData = await ApiService.updateProfile(userId, updateData);
 
             final updatedUser = User.fromJson(updatedUserData);
             await ref.read(authProvider.notifier).setUser(updatedUser);
